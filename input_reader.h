@@ -9,6 +9,7 @@ enum class QueryType {
 	AddBus,
 	AddStop,
 	BusInfo,
+	BusOperation,
 	Unknown
 };
 

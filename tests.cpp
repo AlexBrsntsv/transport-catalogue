@@ -4,6 +4,7 @@
 #include "input_reader.h"
 #include <cassert>
 #include <algorithm>
+#include <sstream>
 
 
 
@@ -62,6 +63,35 @@ void InputReaderGetCmdTest() {
 	assert(comands_type_real == comands_type_ethalon);
 }
 
+void InputReaderInputOperatorTest() {
+	std::string s =
+		"Stop Tolstopaltsevo : 55.611087, 37.208290\n"
+		"Stop Marushkino : 55.595884, 37.209755\n"s
+		"Bus 256 : Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s
+		"Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka\n"s
+		"Stop Rasskazovka : 55.632761, 37.333324"s
+		"Stop   Biryulyovo Zapadnoye : 55.574371, 37.651700\n"s
+		"Stop Biryusinka : 55.581065, 37.648390\n"s
+		"Stop Universam : 55.587655, 37.645687"s
+		"Stop Biryulyovo Tovarnaya : 55.592028, 37.653656\n"s
+		"Stop Biryulyovo Passazhirskaya : 55.580999, 37.659164\n"s
+		"Bus 256\n"s
+		"Bus 750\n"s
+		"Bus    751\n"s
+		"SBus    751\n"s
+		"Stap Biryulyovo Passazhirskaya : 55.580999, 37.659164\n"s;
+	std::stringstream ss(s);
+	std::vector<Query> vq;
+	
+
+		Query q;
+		ss >> q;
+
+
+}
+
+
+
 
 
 
@@ -69,6 +99,7 @@ void InputReaderGetCmdTest() {
 
 void InputReaderRunTests() {
 	InputReaderGetCmdTest();
+	InputReaderInputOperatorTest();
 
 }
 

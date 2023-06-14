@@ -45,8 +45,8 @@ Coordinates GetStopCoordinates(std::string_view s) {
 	coordinates_str.remove_prefix ( coordinates_str.find_first_not_of(pref_char_to_remove) );
 	size_t comma_pos = coordinates_str.find_first_of(',');
 	std::string lat_s (coordinates_str.substr(0, comma_pos));
-	std::string lng_s(coordinates_str.substr(comma_pos + 2) );
-	return { std::stod(lat_s, 0), std::stod(lng_s, 0) };
+	std::string lng_s (coordinates_str.substr(comma_pos + 2) );
+	return { std::stod(lat_s), std::stod(lng_s) };
 }
 
 QueryType GetQueryType(std::string_view s) {
@@ -72,6 +72,12 @@ QueryType GetQueryType(std::string_view s) {
 		return QueryType::Unknown;
 	}
 
+}
+
+QueryType ToQueryType(std::string s) {
+	if (s == "Stop"s) return QueryType::AddStop;
+	else if (s == "Bus"s) return QueryType::BusOperation;
+	else return QueryType::Unknown;
 }
 
 
@@ -104,32 +110,101 @@ QueryType GetQueryType(std::string_view s) {
 //}
 
 
-std::istream& operator>> (std::istream& in, Query& q) {
-	q.type = QueryType::Unknown; // initial value
-	std::string input_str;
-	getline(in, input_str);
-	std::string_view s(input_str);
-	// remove space from begin
-	if (size_t start_pos = s.find_first_not_of(' '); start_pos != s.npos) s.remove_prefix(start_pos);
-	else return in;
+//std::istream& operator>> (std::istream& in, Query& q) {
+//	q.type = QueryType::Unknown; // initial value
+//	std::string input_str;
+//	getline(in, input_str);
+//	std::string_view s(input_str);
+//	// remove space from begin
+//	if (size_t start_pos = s.find_first_not_of(' '); start_pos != s.npos) s.remove_prefix(start_pos);
+//	else return in;
+//
+//	q.type = GetQueryType(s);
+//	switch (q.type) {
+//	case QueryType::AddBus:
+//		break;
+//	case QueryType::AddStop:
+//		s.remove_prefix( COMMAND_ADD_STOP.size() );		
+//		q.stop.name = std::string(GetStopName(s));
+//		s.remove_prefix( q.stop.name.size() );
+//		q.stop.coordinates = GetStopCoordinates(s);
+//		break;
+//	case QueryType::BusInfo:
+//		break;
+//	case QueryType::Unknown:
+//		break;
+//	}
+//
+//	return in;
+//
+//
+//}
 
-	q.type = GetQueryType(s);
+/*Query ParseBusOperationCommand(std::istream& in) {
+	Query q;
+
+	bool first_name_part = true;
+
+	do {
+		std::string name_part;
+		if (!(in >> name_part)) {
+
+
+		}
+
+		if (first_name_part) {
+			first_name_part = false;
+		}
+		else {
+			name += ' ';
+		}
+		if (name_part == ":"s) break;
+		name += name_part;
+	} while (name.back() != ':');
+	cout << name << " "s << boolalpha << bus_info_reques << endl;
+
+}*/
+
+Query ParseAddStopCommand(std::istream& in) {
+	Query q;
+	q.type = QueryType::AddStop;
+
+	bool first_name_part = true;
+	do {
+		std::string name_part;
+		in >> name_part;
+
+		if (first_name_part) {
+			first_name_part = false;
+		}
+		else {
+			q.stop.name += ' ';
+		}
+		if (name_part == ":"s) break;
+		q.stop.name += name_part;
+	} while (q.stop.name.back() != ':');
+	q.stop.name.pop_back();
+	
+	char comma;
+	in >> q.stop.coordinates.lat >> comma >> q.stop.coordinates.lng;
+	return q;
+}
+
+std::istream& operator>> (std::istream& in, Query& q) {
+	std::string cmd;
+	in >> cmd;
+	q.type = ToQueryType(cmd);
 	switch (q.type) {
-	case QueryType::AddBus:
-		break;
 	case QueryType::AddStop:
-		s.remove_prefix( COMMAND_ADD_STOP.size() );		
-		q.stop.name = std::string(GetStopName(s));
-		s.remove_prefix( q.stop.name.size() );
-		q.stop.coordinates = GetStopCoordinates(s);
+		q = ParseAddStopCommand(in);
 		break;
-	case QueryType::BusInfo:
+	case QueryType::BusOperation:
 		break;
 	case QueryType::Unknown:
 		break;
 	}
 
-	return in;
 
+	return in;
 
 }
