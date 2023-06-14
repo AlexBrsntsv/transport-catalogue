@@ -1,6 +1,86 @@
 
+#include "tests.h"
 #include "transport_catalogue.h"
+#include "input_reader.h"
 #include <cassert>
+#include <algorithm>
+
+
+
+
+
+
+
+//===============================================================
+// input_reader tests
+
+
+
+
+void InputReaderGetCmdTest() {
+	std::vector<std::string> strings_to_parse = {
+		"Stop Tolstopaltsevo : 55.611087, 37.208290"s,
+		"Stop Marushkino : 55.595884, 37.209755"s,
+		"Bus 256 : Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye"s,
+		"Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka"s,
+		"Stop Rasskazovka : 55.632761, 37.333324"s,
+		"Stop   Biryulyovo Zapadnoye : 55.574371, 37.651700"s,
+		"Stop Biryusinka : 55.581065, 37.648390"s,
+		"Stop Universam : 55.587655, 37.645687"s,
+		"Stop Biryulyovo Tovarnaya : 55.592028, 37.653656"s,
+		"Stop Biryulyovo Passazhirskaya : 55.580999, 37.659164"s,
+		"Bus 256"s,
+		"Bus 750"s,
+		"Bus    751"s,
+		"SBus    751"s,
+		"Stap Biryulyovo Passazhirskaya : 55.580999, 37.659164"s,
+
+	};
+
+	const std::vector<QueryType> comands_type_ethalon = {
+		QueryType::AddStop,				
+		QueryType::AddStop,
+		QueryType::AddBus,
+		QueryType::AddBus,
+		QueryType::AddStop,
+		QueryType::AddStop,
+		QueryType::AddStop,
+		QueryType::AddStop,
+		QueryType::AddStop,
+		QueryType::AddStop,
+		QueryType::BusInfo,
+		QueryType::BusInfo,
+		QueryType::BusInfo,
+		QueryType::Unknown,
+		QueryType::Unknown
+	};
+
+	std::vector<QueryType> comands_type_real;
+	for (const std::string& s : strings_to_parse) {
+		comands_type_real.push_back( GetQueryType(s) );
+	}
+	assert(comands_type_real == comands_type_ethalon);
+}
+
+
+
+
+
+
+void InputReaderRunTests() {
+	InputReaderGetCmdTest();
+
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

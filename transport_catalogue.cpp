@@ -4,11 +4,6 @@
 #include <iostream>
 
 
-/*
-bool operator==(const Stop& lhs, const Stop& rhs) {
-	return lhs.coordinates == rhs.coordinates && lhs.name == rhs.name;
-}*/
-
 using namespace std::literals;
 
 static const Stop invalid_stop = { ""s, {90.0, 0.0} };	// north pole
@@ -73,19 +68,6 @@ const Bus& TransportCatalogue::FindBus(std::string bus_name) {
 }
 
 std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::string bus_name) {
-	//int unique_stops = 0;
-	//int stops_on_route = 0;
-	//if (const Bus& bus = FindBus(bus_name); BusIsValid(bus)) {
-	//	unique_stops = bus.route.size();
-	//	std::vector<Bus*> v (bus.route.begin(), bus.route.end());
-	//	std::sort(v.begin(), v.end());
-	//	v.erase( std::unique(v.begin(), v.end()), v.end());
-	//	unique_stops = v.size();
-
-
-	//}
-	//else return std::nullopt;
-
 		return ( BusInfo{ 0,0,0.0 } );
 
 }

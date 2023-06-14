@@ -40,6 +40,14 @@ bool BusIsValid(const Bus& bus);
 void PrintBus(const Bus& bus);
 
 
+struct PairHasher {	
+	size_t operator()(const std::pair<Stop*, Stop*>& p) {
+		size_t prime_number = 37;
+		return reinterpret_cast<size_t>(p.first) + reinterpret_cast<size_t>(p.second) * prime_number;
+	}
+};
+
+
 class TransportCatalogue {
 	using BusInfo = std::tuple<int, int, double>;
 	
@@ -58,5 +66,5 @@ private:
 	std::unordered_map<std::string_view, const Stop*, std::hash<std::string_view>> stopname_to_stop_;	// хеш таблица для быстрого поиска по структуре stops_
 	std::deque<Bus> buses_;																				// структура данных, содержащая данные об автобусахы
 	std::unordered_map<std::string_view, const Bus*, std::hash<std::string_view>> busname_to_bus_;		// хеш таблица для быстрого поиска по структуре buses_
-
+	std::unordered_map<std::pair<Stop*, Stop*>, double, PairHasher> stop_to_stop_distances_;
 };

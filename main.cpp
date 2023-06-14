@@ -1,11 +1,12 @@
 #include <iostream>
-#include "transport_catalogue_tests.h"
+#include "tests.h"
 
 
 
 
 int main() {
 	TransportCatalogueRunTests();
+	InputReaderRunTests();
 	std::cout << "everything is OK" << std::endl;
 
 
