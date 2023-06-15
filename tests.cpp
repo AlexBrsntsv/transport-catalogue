@@ -5,9 +5,10 @@
 #include <cassert>
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 
 
-
+using namespace std::literals;
 
 
 
@@ -15,104 +16,144 @@
 //===============================================================
 // input_reader tests
 
+void InputReaderParseBusNameTest() {
 
-
-
-void InputReaderGetCmdTest() {
-	std::vector<std::string> strings_to_parse = {
-		"Stop Tolstopaltsevo : 55.611087, 37.208290"s,
-		"Stop Marushkino : 55.595884, 37.209755"s,
-		"Bus 256 : Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye"s,
-		"Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka"s,
-		"Stop Rasskazovka : 55.632761, 37.333324"s,
-		"Stop   Biryulyovo Zapadnoye : 55.574371, 37.651700"s,
-		"Stop Biryusinka : 55.581065, 37.648390"s,
-		"Stop Universam : 55.587655, 37.645687"s,
-		"Stop Biryulyovo Tovarnaya : 55.592028, 37.653656"s,
-		"Stop Biryulyovo Passazhirskaya : 55.580999, 37.659164"s,
-		"Bus 256"s,
-		"Bus 750"s,
-		"Bus    751"s,
-		"SBus    751"s,
-		"Stap Biryulyovo Passazhirskaya : 55.580999, 37.659164"s,
-
-	};
-
-	const std::vector<QueryType> comands_type_ethalon = {
-		QueryType::AddStop,				
-		QueryType::AddStop,
-		QueryType::AddBus,
-		QueryType::AddBus,
-		QueryType::AddStop,
-		QueryType::AddStop,
-		QueryType::AddStop,
-		QueryType::AddStop,
-		QueryType::AddStop,
-		QueryType::AddStop,
-		QueryType::BusInfo,
-		QueryType::BusInfo,
-		QueryType::BusInfo,
-		QueryType::Unknown,
-		QueryType::Unknown
-	};
-
-	std::vector<QueryType> comands_type_real;
-	for (const std::string& s : strings_to_parse) {
-		comands_type_real.push_back( GetQueryType(s) );
+	{
+		std::stringstream ss(" 256 long   : Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s);
+		auto result = ParseBusName(ss);
+		assert( "256 long"s == result.first );
+		assert(false == result.second);
 	}
-	assert(comands_type_real == comands_type_ethalon);
+
+	{
+		std::stringstream ss("256 long: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s);
+		auto result = ParseBusName(ss);
+		assert("256 long"s == result.first);
+		assert(false == result.second);
+	}
+
+	{
+		std::stringstream ss(" 256 long  \n"s);
+		auto result = ParseBusName(ss);
+		assert("256 long"s == result.first);
+		assert(true == result.second);
+	}
+
+	{
+		std::stringstream ss("256 long \n"s);
+		auto result = ParseBusName(ss);
+		assert("256 long"s == result.first);
+		assert(true == result.second);
+	}
+
+}
+
+void InputReaderParseBusRouteTest() {
+
+
+	{
+		std::stringstream ss(
+			" Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s
+		);		
+		std::vector<std::string> ethalon = {
+			"Biryulyovo Zapadnoye"s,
+			"Biryusinka"s,
+			"Universam"s,
+			"Biryulyovo Tovarnaya"s,
+			"Biryulyovo Passazhirskaya"s,
+			"Biryulyovo Zapadnoye"s
+		};
+		std::vector<std::string> result = ParseBusRoute(ss);
+		assert(result == ethalon);
+	}
+
+	{
+		std::stringstream ss(
+			" Tolstopaltsevo - Marushkino - Rasskazovka"s
+		);
+		std::vector<std::string> ethalon = {
+			"Tolstopaltsevo"s,
+			"Marushkino"s,
+			"Rasskazovka"s,
+			"Marushkino"s,
+			"Tolstopaltsevo"s			
+		};
+		std::vector<std::string> result = ParseBusRoute(ss);
+		assert(result == ethalon);
+	}	
+
+
+}
+
+
+bool operator==(const Query& lhs, const Query& rhs) {
+	return
+		lhs.bus_info == rhs.bus_info &&
+		lhs.stop == rhs.stop &&
+		lhs.type == rhs.type;
 }
 
 void InputReaderInputOperatorTest() {
-	std::string s =
+	
+	std::istringstream iss(
 		"Stop Tolstopaltsevo : 55.611087, 37.208290\n"
 		"Stop Marushkino : 55.595884, 37.209755\n"s
 		"Bus 256 : Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s
 		"Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka\n"s
-		"Stop Rasskazovka : 55.632761, 37.333324"s
+		"Stop Rasskazovka : 55.632761, 37.333324\n"s
 		"Stop   Biryulyovo Zapadnoye : 55.574371, 37.651700\n"s
 		"Stop Biryusinka : 55.581065, 37.648390\n"s
-		"Stop Universam : 55.587655, 37.645687"s
+		"Stop Universam : 55.587655, 37.645687\n"s
 		"Stop Biryulyovo Tovarnaya : 55.592028, 37.653656\n"s
 		"Stop Biryulyovo Passazhirskaya : 55.580999, 37.659164\n"s
 		"Bus 256\n"s
 		"Bus 750\n"s
 		"Bus    751\n"s
 		"SBus    751\n"s
-		"Stap Biryulyovo Passazhirskaya : 55.580999, 37.659164\n"s;
-	std::stringstream ss(s);
-	std::vector<Query> vq;
+		"Stap Biryulyovo Passazhirskaya : 55.580999, 37.659164"s
+	);
+		
+	std::vector<Query> queries_ethalon = {
+		{ QueryType::AddStop, {}, {"Tolstopaltsevo"s,55.611087, 37.208290} },
+		{ QueryType::AddStop, {}, {"Marushkino"s,55.595884, 37.209755} },
+		{ QueryType::AddBus, {"256"s, {"Biryulyovo Zapadnoye"s, "Biryusinka"s, "Universam"s, "Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, "Biryulyovo Zapadnoye"s} },{} },
+		{ QueryType::AddBus, {"750"s, {"Tolstopaltsevo"s, "Marushkino"s, "Rasskazovka"s, "Marushkino"s, "Tolstopaltsevo"s} }, {} },
+		{ QueryType::AddStop, {}, {"Rasskazovka"s,55.632761, 37.333324} },
+		{ QueryType::AddStop, {}, {"Biryulyovo Zapadnoye"s,55.574371, 37.651700} },
+		{ QueryType::AddStop, {}, {"Biryusinka"s,55.581065, 37.648390} },
+		{ QueryType::AddStop, {}, {"Universam"s,55.587655, 37.645687} },
+		{ QueryType::AddStop, {}, {"Biryulyovo Tovarnaya"s,55.592028, 37.653656} },
+		{ QueryType::AddStop, {}, {"Biryulyovo Passazhirskaya"s,55.580999, 37.659164} },
+		{ QueryType::BusInfo, { "256"s, {} }, {} },
+		{ QueryType::BusInfo, { "750"s, {} }, {} },
+		{ QueryType::BusInfo, { "751"s, {} }, {} },
+		{ QueryType::Unknown, {}, {} },
+		{ QueryType::Unknown, {}, {} }
+	};
+	std::vector<Query> result;
+	for(size_t i = 0; i < 15; ++i) {
+		Query q{};
+		iss >> q;
+		result.push_back(q);
+	}
+
+	assert(queries_ethalon == result);
+	std::cout << "InputReaderInputOperatorTest is OK"s << std::endl;
 	
-
-		Query q;
-		ss >> q;
-
-
 }
-
-
-
 
 
 
 
 
 void InputReaderRunTests() {
-	InputReaderGetCmdTest();
+	//InputReaderGetCmdTest();
+	//InputReaderInputOperatorTest();
+	//InputReaderParseBusNameTest();
+	//InputReaderParseBusRouteTest();
 	InputReaderInputOperatorTest();
 
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 void TransportCatalogueMethodsForStopTest() {
@@ -180,21 +221,7 @@ void TransportCatalogueAddBusTest() {
 	// none success operations
 	assert(!transport_catalogue.AddBus("999"s, { "unexistable stop"s, "church"s, "Universam"s, "Biryulyovo Passazhirskaya"s }));	
 	assert(!transport_catalogue.AddBus("111"s, { "Abzakovo"s, "Rasskazovka"s, "Marushkino"s, "another unexistable stop"s, ""s, ""s, "Biryulyovo Passazhirskaya"s }));
-
-
 	
-
-
-
-
-
-	PrintBus( transport_catalogue.FindBus("811"s) );
-	PrintBus( transport_catalogue.FindBus("100"s));
-	PrintBus(transport_catalogue.FindBus("999"s));
-	PrintBus(transport_catalogue.FindBus("111"s));
-
-
-
 }
 
 

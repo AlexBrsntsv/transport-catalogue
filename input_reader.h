@@ -15,10 +15,14 @@ enum class QueryType {
 
 struct Query {
 	QueryType type;
-	std::pair <std::string, std::vector<std::string>> add_bus_info;
+	std::pair <std::string, std::vector<std::string>> bus_info;
 	Stop stop;
 };
 
-QueryType GetQueryType(std::string_view s);
+
 
 std::istream& operator>> (std::istream& in, Query& q);
+
+// internal using
+std::pair<std::string, bool> ParseBusName(std::istream& in);
+std::vector<std::string> ParseBusRoute(std::istream& in);
