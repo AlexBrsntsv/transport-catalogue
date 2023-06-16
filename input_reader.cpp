@@ -5,6 +5,7 @@
 #include <execution>
 
 
+
 static const std::string COMMAND_ADD_STOP = "Stop"s;
 static const std::string COMMAND_BUS = "Bus"s;
 
@@ -135,3 +136,35 @@ std::istream& operator>> (std::istream& in, Query& q) {
 	}
 	return in;
 }
+
+void ProccessAddStopQuery(TransportCatalogue& trans_ctlg, Query& q) {
+	trans_ctlg.AddStop(q.stop);
+}
+
+void ProccessAddBusQuery(TransportCatalogue& trans_ctlg, Query& q) {
+	trans_ctlg.AddBus( q.bus_info.first, q.bus_info.second );
+}
+
+
+
+void InputQueryQueue::AddQuery(Query&& q) {
+	switch (q.type) {
+	case QueryType::AddBus:
+		AddBusQueryQueue.push(q);
+		break;
+
+	case QueryType::AddStop:
+		AddStopQueryQueue.push(q);
+		break;
+	}
+}
+	
+std::queue<Query>& InputQueryQueue::Busies() { return AddBusQueryQueue; }
+
+std::queue<Query>& InputQueryQueue::Stops() { return AddStopQueryQueue; }
+
+
+
+
+
+

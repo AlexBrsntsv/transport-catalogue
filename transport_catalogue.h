@@ -54,11 +54,11 @@ class TransportCatalogue {
 public:
 	void AddStop(const Stop& stop);
 
-	const Stop& FindStop(std::string stop_name);
+	const Stop& FindStop(std::string stop_name) const;
 
 	bool AddBus(const std::string& bus_name, const std::vector<std::string>& stops_list );
-	const Bus& FindBus(std::string bus_name);
-	std::optional<BusInfo> GetBusInfo(std::string bus_name);
+	const Bus& FindBus(std::string bus_name) const;
+	std::optional<BusInfo> GetBusInfo(std::string bus_name) const;
 
 
 private:

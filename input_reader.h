@@ -1,6 +1,7 @@
 #pragma once
 #include "transport_catalogue.h"
 #include <sstream>
+#include <queue>
 
 using namespace std::literals;
 
@@ -22,6 +23,22 @@ struct Query {
 
 
 std::istream& operator>> (std::istream& in, Query& q);
+
+class InputQueryQueue {
+public:
+	InputQueryQueue() = default;
+	void AddQuery(Query&& q);	
+	std::queue<Query>& Busies();
+	std::queue<Query>& Stops();
+
+private:
+	std::queue<Query> AddBusQueryQueue;
+	std::queue<Query> AddStopQueryQueue;
+};
+
+void ProccessAddStopQuery(TransportCatalogue& trans_ctlg, Query& q); 
+void ProccessAddBusQuery(TransportCatalogue& trans_ctlg, Query& q);
+
 
 // internal using
 std::pair<std::string, bool> ParseBusName(std::istream& in);

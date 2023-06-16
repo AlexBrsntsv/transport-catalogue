@@ -9,17 +9,14 @@ using namespace std::literals;
 static const Stop invalid_stop = { ""s, {90.0, 0.0} };	// north pole
 static const Bus invalid_bus = { ""s, {} };				// unexisted bus
 
-void TransportCatalogue::AddStop(const Stop& stop) {
-	stops_.push_back(stop);
-	stopname_to_stop_[ std::string_view(stops_.back().name) ] = &stops_.back();
-}
 
 
-bool StopIsValid(const Stop& stop) {	
+
+static bool StopIsValid(const Stop& stop) {	
 	return stop != invalid_stop;
 }
 
-bool BusIsValid(const Bus& bus) {
+static bool BusIsValid(const Bus& bus) {
 	return bus != invalid_bus;
 }
 
@@ -31,8 +28,13 @@ void PrintBus(const Bus& bus) {
 	std::cout << std::endl;
 }
 
+void TransportCatalogue::AddStop(const Stop& stop) {
+	stops_.push_back(stop);
+	stopname_to_stop_[std::string_view(stops_.back().name)] = &stops_.back();
+}
 
-const Stop& TransportCatalogue::FindStop(std::string stop_name) {		
+
+const Stop& TransportCatalogue::FindStop(std::string stop_name) const {		
 	if (const auto it = stopname_to_stop_.find(stop_name); it == stopname_to_stop_.end()) {
 		return invalid_stop;
 	}
@@ -57,7 +59,7 @@ bool TransportCatalogue::AddBus(const std::string& bus_name, const std::vector<s
 
 }
 
-const Bus& TransportCatalogue::FindBus(std::string bus_name) {
+const Bus& TransportCatalogue::FindBus(std::string bus_name) const {
 	if (const auto it = busname_to_bus_.find(bus_name); it == busname_to_bus_.end()) {
 		return invalid_bus;
 	}
@@ -67,7 +69,15 @@ const Bus& TransportCatalogue::FindBus(std::string bus_name) {
 	}
 }
 
-std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::string bus_name) {
-		return ( BusInfo{ 0,0,0.0 } );
+std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::string bus_name) const {
+	//const Bus& bus = FindBus(bus_name);
+	//if (!BusIsValid(bus)) return std::nullopt;
+	//std::vector<const Stop*> unique_stops(bus.route.begin(), bus.route.end());
+	//unique_stops.erase( std::unique( unique_stops.begin(), unique_stops.end() ), unique_stops.end() );
+
+
+
+	//return ( BusInfo{ bus.route.size(),unique_stops.size(), 0.0});
+	return BusInfo{ 0,0, 0.0 };
 
 }
