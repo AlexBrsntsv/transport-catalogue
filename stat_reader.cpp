@@ -7,8 +7,8 @@
 
 std::string DisplayBusInfo(const TransportCatalogue& trans_ctlg, const std::string& bus_name){
 	Bus bus = trans_ctlg.FindBus(bus_name);
-	if (!BusIsValid(bus)) return "Bus " + bus_name + ": not found.";
+	//if (!BusIsValid(bus)) return "Bus " + bus_name + ": not found.";
 
-
+	return std::string{};
 }
 

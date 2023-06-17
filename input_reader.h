@@ -16,30 +16,41 @@ enum class QueryType {
 
 struct Query {
 	QueryType type;
-	std::pair <std::string, std::vector<std::string>> bus_info;
+	std::string bus_name_info;
+	BusNew bus_new;
 	Stop stop;
 };
 
 
 
-std::istream& operator>> (std::istream& in, Query& q);
+class InputReader {
+public:
+	Query GetQuery(std::istream& in);
+
+private:
+	inline static const std::string COMMAND_ADD_STOP = "Stop"s;
+	inline static const std::string COMMAND_BUS = "Bus"s;
+
+	static std::pair<std::string, bool> ParseBusName(std::istream& in);
+	static std::vector<std::string> ParseBusRoute(std::istream& in);
+	static Query ParseAddStopCommand(std::istream& in);
+	static std::string TrimWhitespaceSurrounding(const std::string& s);
+	static std::pair<std::string, std::string> Split(std::string line, char by);
+	static QueryType ToQueryType(const std::string& s);
+};
+
 
 class InputQueryQueue {
 public:
 	InputQueryQueue() = default;
-	void AddQuery(Query&& q);	
+	void AddQuery(const Query& q);	
 	std::queue<Query>& Busies();
 	std::queue<Query>& Stops();
-
 private:
-	std::queue<Query> AddBusQueryQueue;
 	std::queue<Query> AddStopQueryQueue;
+	std::queue<Query> AddBusQueryQueue;
 };
 
-void ProccessAddStopQuery(TransportCatalogue& trans_ctlg, Query& q); 
-void ProccessAddBusQuery(TransportCatalogue& trans_ctlg, Query& q);
 
-
-// internal using
-std::pair<std::string, bool> ParseBusName(std::istream& in);
-std::vector<std::string> ParseBusRoute(std::istream& in);
+void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, Query& q);
+void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, Query& q);

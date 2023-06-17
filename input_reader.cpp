@@ -5,12 +5,8 @@
 #include <execution>
 
 
-
-static const std::string COMMAND_ADD_STOP = "Stop"s;
-static const std::string COMMAND_BUS = "Bus"s;
-
 // remove spaces before and after string
-std::string trim_whitespace_surrounding(const std::string& s) {
+std::string InputReader::TrimWhitespaceSurrounding(const std::string& s) {
 	const char whitespace[]{ " \t\n" };
 	const size_t first(s.find_first_not_of(whitespace));
 	if (std::string::npos == first) { return {}; }
@@ -19,7 +15,7 @@ std::string trim_whitespace_surrounding(const std::string& s) {
 }
 
 
-std::pair<std::string, std::string> Split(std::string line, char by) {
+std::pair<std::string, std::string> InputReader::Split(std::string line, char by) {
 	if (line.empty()) return  { std::string(), std::string() };
 	size_t pos = line.find(by);
 	std::string left = line.substr(0, pos);
@@ -32,14 +28,14 @@ std::pair<std::string, std::string> Split(std::string line, char by) {
 	}
 }
 
-QueryType ToQueryType(std::string s) {
+QueryType InputReader::ToQueryType(const std::string& s) {
 	if (s == "Stop"s) return QueryType::AddStop;
 	else if (s == "Bus"s) return QueryType::BusOperation;
 	else return QueryType::Unknown;
 }
 
 
-std::pair<std::string, bool> ParseBusName(std::istream& in) {
+std::pair<std::string, bool> InputReader::ParseBusName(std::istream& in) {
 	bool bus_info_mark = false;
 	char c;
 	std::string name;
@@ -56,10 +52,10 @@ std::pair<std::string, bool> ParseBusName(std::istream& in) {
 			name += c;
 		}
 	}
-	return { trim_whitespace_surrounding(name), bus_info_mark };
+	return { TrimWhitespaceSurrounding(name), bus_info_mark };
 }
 
-std::vector<std::string> ParseBusRoute(std::istream& in) {
+std::vector<std::string> InputReader::ParseBusRoute(std::istream& in) {
 	std::vector<std::string> result;
 	std::string route;
 	getline(in, route);
@@ -72,7 +68,7 @@ std::vector<std::string> ParseBusRoute(std::istream& in) {
 	}
 
 	for (auto string_parts = Split(route, split_symbol); !string_parts.first.empty(); string_parts = Split(string_parts.second, split_symbol)) {
-		result.push_back( trim_whitespace_surrounding(string_parts.first) );
+		result.push_back( TrimWhitespaceSurrounding(string_parts.first) );
 	}
 
 	if (split_symbol == '-') {
@@ -83,7 +79,7 @@ std::vector<std::string> ParseBusRoute(std::istream& in) {
 }
 
 
-Query ParseAddStopCommand(std::istream& in) {
+Query InputReader::ParseAddStopCommand(std::istream& in) {
 	Query q;
 	q.type = QueryType::AddStop;
 
@@ -108,7 +104,8 @@ Query ParseAddStopCommand(std::istream& in) {
 	return q;
 }
 
-std::istream& operator>> (std::istream& in, Query& q) {
+Query InputReader::GetQuery(std::istream& in) {
+	Query q{};
 	std::string cmd;
 	in >> cmd;
 	q.type = ToQueryType(cmd);
@@ -120,13 +117,13 @@ std::istream& operator>> (std::istream& in, Query& q) {
 		const auto [bus_name, bus_info_cmd_mark] = ParseBusName(in);
 		if (bus_info_cmd_mark) {
 			q.type = QueryType::BusInfo;
-			q.bus_info.first = bus_name;
-			return in;
+			q.bus_name_info = bus_name;
+			return q;
 		}
 		else {
 			q.type = QueryType::AddBus;
-			q.bus_info.first = bus_name;
-			q.bus_info.second = ParseBusRoute(in);
+			q.bus_new = { bus_name, ParseBusRoute(in) };
+			return q;
 		}
 		break;
 	}
@@ -134,20 +131,19 @@ std::istream& operator>> (std::istream& in, Query& q) {
 	case QueryType::Unknown:
 		break;
 	}
-	return in;
+	return q;
 }
 
-void ProccessAddStopQuery(TransportCatalogue& trans_ctlg, Query& q) {
-	trans_ctlg.AddStop(q.stop);
+void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, Query& q) {
+	transport_catalogue.AddStop(q.stop);
 }
 
-void ProccessAddBusQuery(TransportCatalogue& trans_ctlg, Query& q) {
-	trans_ctlg.AddBus( q.bus_info.first, q.bus_info.second );
+void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, Query& q) {
+	transport_catalogue.AddBus( q.bus_new );
 }
 
 
-
-void InputQueryQueue::AddQuery(Query&& q) {
+void InputQueryQueue::AddQuery(const Query& q) {
 	switch (q.type) {
 	case QueryType::AddBus:
 		AddBusQueryQueue.push(q);
@@ -160,8 +156,9 @@ void InputQueryQueue::AddQuery(Query&& q) {
 }
 	
 std::queue<Query>& InputQueryQueue::Busies() { return AddBusQueryQueue; }
-
 std::queue<Query>& InputQueryQueue::Stops() { return AddStopQueryQueue; }
+
+
 
 
 

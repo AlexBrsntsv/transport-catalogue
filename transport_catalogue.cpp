@@ -59,6 +59,22 @@ bool TransportCatalogue::AddBus(const std::string& bus_name, const std::vector<s
 
 }
 
+bool TransportCatalogue::AddBus(const BusNew& bus) {
+
+	Bus bus_to_add = { bus.name, {} };
+	for (const std::string& stop_name : bus.route) {
+		if (const Stop& curr_stop = FindStop(stop_name); StopIsValid(curr_stop)) {
+			bus_to_add.route.push_back(&curr_stop);
+		}
+		else return false;
+	}
+	buses_.push_back(bus_to_add);
+	busname_to_bus_[buses_.back().name] = &buses_.back();
+	return true;
+}
+
+
+
 const Bus& TransportCatalogue::FindBus(std::string bus_name) const {
 	if (const auto it = busname_to_bus_.find(bus_name); it == busname_to_bus_.end()) {
 		return invalid_bus;

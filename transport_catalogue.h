@@ -22,7 +22,7 @@ struct Stop {
 		return !(*this == other);
 	}
 };
-bool StopIsValid(const Stop& stop);
+//static bool StopIsValid(const Stop& stop);
 
 
 struct Bus {
@@ -36,7 +36,14 @@ struct Bus {
 		return !(*this == other);
 	}
 };
-bool BusIsValid(const Bus& bus);
+
+struct BusNew {
+	std::string name;
+	std::vector<std::string> route;
+};
+
+
+//static bool BusIsValid(const Bus& bus);
 void PrintBus(const Bus& bus);
 
 
@@ -57,6 +64,7 @@ public:
 	const Stop& FindStop(std::string stop_name) const;
 
 	bool AddBus(const std::string& bus_name, const std::vector<std::string>& stops_list );
+	bool AddBus(const BusNew& bus);
 	const Bus& FindBus(std::string bus_name) const;
 	std::optional<BusInfo> GetBusInfo(std::string bus_name) const;
 
