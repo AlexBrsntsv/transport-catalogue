@@ -2,22 +2,25 @@
 #include "transport_catalogue.h"
 #include <algorithm>
 #include <iostream>
+#include <numeric>
+#include "geo.h"
+#include <functional>
 
 
 using namespace std::literals;
 
-static const Stop invalid_stop = { ""s, {90.0, 0.0} };	// north pole
-static const Bus invalid_bus = { ""s, {} };				// unexisted bus
+static const Stop invalid_stop = { ""s, {} };	// unexisted stop
+static const Bus invalid_bus = { ""s, {} };		// unexisted bus
 
 
 
 
 static bool StopIsValid(const Stop& stop) {	
-	return stop != invalid_stop;
+	return !stop.name.empty();
 }
 
 static bool BusIsValid(const Bus& bus) {
-	return bus != invalid_bus;
+	return !bus.name.empty();
 }
 
 void PrintBus(const Bus& bus) {
@@ -73,8 +76,6 @@ bool TransportCatalogue::AddBus(const BusNew& bus) {
 	return true;
 }
 
-
-
 const Bus& TransportCatalogue::FindBus(std::string bus_name) const {
 	if (const auto it = busname_to_bus_.find(bus_name); it == busname_to_bus_.end()) {
 		return invalid_bus;
@@ -86,14 +87,28 @@ const Bus& TransportCatalogue::FindBus(std::string bus_name) const {
 }
 
 std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::string bus_name) const {
-	//const Bus& bus = FindBus(bus_name);
-	//if (!BusIsValid(bus)) return std::nullopt;
-	//std::vector<const Stop*> unique_stops(bus.route.begin(), bus.route.end());
-	//unique_stops.erase( std::unique( unique_stops.begin(), unique_stops.end() ), unique_stops.end() );
-
-
-
-	//return ( BusInfo{ bus.route.size(),unique_stops.size(), 0.0});
-	return BusInfo{ 0,0, 0.0 };
+	const Bus& bus = FindBus(bus_name);
+	if (!BusIsValid(bus)) return std::nullopt;
+	std::vector<const Stop*> unique_stops(bus.route.begin(), bus.route.end());
+	std::sort(unique_stops.begin(), unique_stops.end());
+	unique_stops.erase( std::unique( unique_stops.begin(), unique_stops.end() ), unique_stops.end() );
+	std::vector<double> distances(bus.route.size());
+	std::transform(
+		std::next(bus.route.begin()),
+		bus.route.end(),
+		bus.route.begin(),
+		distances.begin(),
+		[](const auto lhs, const auto rhs) {
+			return ComputeDistance(lhs->coordinates, rhs->coordinates);
+		}
+	);
+	double distance = std::reduce(
+		distances.begin(),
+		distances.end(),
+		0.0,
+		std::plus<>()
+	);
+	
+	return BusInfo{ bus.route.size(),unique_stops.size(), distance };
 
 }

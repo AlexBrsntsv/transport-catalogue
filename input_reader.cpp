@@ -2,11 +2,10 @@
 // код сохраните в свой git-репозиторий
 #include "input_reader.h"
 #include <string_view>
-#include <execution>
 
 
 // remove spaces before and after string
-std::string InputReader::TrimWhitespaceSurrounding(const std::string& s) {
+std::string TrimWhitespaceSurrounding(const std::string& s) {
 	const char whitespace[]{ " \t\n" };
 	const size_t first(s.find_first_not_of(whitespace));
 	if (std::string::npos == first) { return {}; }
@@ -15,130 +14,108 @@ std::string InputReader::TrimWhitespaceSurrounding(const std::string& s) {
 }
 
 
-std::pair<std::string, std::string> InputReader::Split(std::string line, char by) {
-	if (line.empty()) return  { std::string(), std::string() };
-	size_t pos = line.find(by);
-	std::string left = line.substr(0, pos);
+// remove spaces before and after string
+std::string_view InputReader::TrimWhitespaceSurrounding(std::string_view s) {
+	const char whitespace[]{ " \t\n" };
+	const size_t first(s.find_first_not_of(whitespace));
+	if (std::string::npos == first) { return {}; }
+	const size_t last(s.find_last_not_of(whitespace));
+	return s.substr(first, (last - first + 1));
+}
+
+std::optional<std::pair<std::string_view, std::string_view>> InputReader::Split(std::string_view line, char by) {
+	if (line.empty()) return std::nullopt;
+	size_t pos = line.find(by);	
+	std::string_view left = line.substr(0, pos);
 
 	if (pos < line.size() && pos + 1 < line.size()) {
-		return { left, line.substr(pos + 1) };
+		return std::optional(std::pair{ left, line.substr(pos + 1) });
 	}
 	else {
-		return { left, std::string() };
+		return std::optional(std::pair{ left, std::string() });
 	}
 }
 
-QueryType InputReader::ToQueryType(const std::string& s) {
-	if (s == "Stop"s) return QueryType::AddStop;
-	else if (s == "Bus"s) return QueryType::BusOperation;
-	else return QueryType::Unknown;
-}
 
-
-std::pair<std::string, bool> InputReader::ParseBusName(std::istream& in) {
-	bool bus_info_mark = false;
-	char c;
-	std::string name;
-	for ( ; in.get(c); ) {
-		if (c == '\n' || in.eof()) {
-			bus_info_mark = true;
-			break;
-		}
-		else if (c == ':') {
-			bus_info_mark = false;
-			break;
-		}
-		else {
-			name += c;
-		}
-	}
-	return { TrimWhitespaceSurrounding(name), bus_info_mark };
-}
-
-std::vector<std::string> InputReader::ParseBusRoute(std::istream& in) {
-	std::vector<std::string> result;
-	std::string route;
-	getline(in, route);
+std::vector<std::string> InputReader::ParseRoute(std::string_view s) {
+	std::vector<std::string> route;
 	char split_symbol;
-	if (route.find_first_of('>') != route.npos) {
-		split_symbol = '>';
+	if (size_t devider_pos = s.find_first_of(">-"); devider_pos != s.npos) {
+		split_symbol = s[devider_pos];
 	}
 	else {
-		split_symbol = '-';
-	}
-
-	for (auto string_parts = Split(route, split_symbol); !string_parts.first.empty(); string_parts = Split(string_parts.second, split_symbol)) {
-		result.push_back( TrimWhitespaceSurrounding(string_parts.first) );
-	}
-
-	if (split_symbol == '-') {
-		std::vector<std::string> v( std::next(result.rbegin()), result.rend() );
-		std::copy(v.begin(), v.end(), std::back_inserter(result));
-	}
-	return result;
-}
-
-
-Query InputReader::ParseAddStopCommand(std::istream& in) {
-	Query q;
-	q.type = QueryType::AddStop;
-
-	bool first_name_part = true;
-	do {
-		std::string name_part;
-		in >> name_part;
-
-		if (first_name_part) {
-			first_name_part = false;
-		}
-		else {
-			q.stop.name += ' ';
-		}
-		if (name_part == ":"s) break;
-		q.stop.name += name_part;
-	} while (q.stop.name.back() != ':');
-	q.stop.name.pop_back();
+		return route;
+	}	
+		
+	for (auto opt = Split(s, split_symbol); opt.has_value(); opt = Split(opt->second, split_symbol)) {
+		route.push_back(std::string(TrimWhitespaceSurrounding(opt->first)));
+	}		
 	
-	char comma;
-	in >> q.stop.coordinates.lat >> comma >> q.stop.coordinates.lng;
-	return q;
+	if (split_symbol == '-') {
+		route.resize( 2 * route.size() - 1);		
+		std::copy(route.begin(), std::prev(route.end()), route.rbegin() );
+	}
+	return route;
 }
 
-Query InputReader::GetQuery(std::istream& in) {
+Coordinates InputReader::ParseStopCoordinates(std::string_view s) {
+	auto opt_coordinates = Split(s, ',');
+	double lat = std::stod( std::string( TrimWhitespaceSurrounding(opt_coordinates->first) ) );
+	double lng = std::stod( std::string( TrimWhitespaceSurrounding(opt_coordinates->second) ) );
+	return { lat,lng };
+}
+
+Query InputReader::ParseQuery(std::string_view s) {
+
+	s = TrimWhitespaceSurrounding(s); // remove spaces
 	Query q{};
-	std::string cmd;
-	in >> cmd;
-	q.type = ToQueryType(cmd);
-	switch (q.type) {
-	case QueryType::AddStop:
-		q = ParseAddStopCommand(in);
-		break;
-	case QueryType::BusOperation: {
-		const auto [bus_name, bus_info_cmd_mark] = ParseBusName(in);
-		if (bus_info_cmd_mark) {
-			q.type = QueryType::BusInfo;
-			q.bus_name_info = bus_name;
+
+	if (auto opt = Split(s, ':'); opt->first != s) {
+		if (opt->first.substr(0, COMMAND_BUS.size()) == COMMAND_BUS) {
+			q.type = QueryType::AddBus;
+			opt->first.remove_prefix(COMMAND_BUS.size());
+			q.bus_new.name = std::string( TrimWhitespaceSurrounding(opt->first) );
+			auto route = ParseRoute(opt->second);
+			q.bus_new.route.swap(route);
+			return q;
+		}
+		else if (opt->first.substr( 0, COMMAND_ADD_STOP.size() ) == COMMAND_ADD_STOP) {
+			opt->first.remove_prefix( COMMAND_ADD_STOP.size() );
+			q.type = QueryType::AddStop;
+			q.stop.name = std::string( TrimWhitespaceSurrounding(opt->first) );
+			q.stop.coordinates = ParseStopCoordinates(opt->second);
 			return q;
 		}
 		else {
-			q.type = QueryType::AddBus;
-			q.bus_new = { bus_name, ParseBusRoute(in) };
+			q.type = QueryType::Invalid;
 			return q;
 		}
-		break;
 	}
-
-	case QueryType::Unknown:
-		break;
+	else {
+		if (s.substr(0, COMMAND_BUS.size()) == COMMAND_BUS) {
+			q.type = QueryType::BusInfo;
+			s.remove_prefix(COMMAND_BUS.size());
+			q.bus_name_info = std::string( TrimWhitespaceSurrounding(s) );
+			return q;
+		}
+		else {
+			q.type = QueryType::Invalid;
+			return q;
+		}
 	}
-	return q;
 }
 
-void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, Query& q) {
+Query InputReader::GetQuery(std::istream& is) {
+	std::string s;
+	std::getline(is, s);
+	return ParseQuery(s);
+}
+
+void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, const Query& q) {
 	transport_catalogue.AddStop(q.stop);
 }
 
-void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, Query& q) {
+void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, const Query& q) {
 	transport_catalogue.AddBus( q.bus_new );
 }
 
@@ -152,16 +129,13 @@ void InputQueryQueue::AddQuery(const Query& q) {
 	case QueryType::AddStop:
 		AddStopQueryQueue.push(q);
 		break;
+
+	case QueryType::Invalid:
+	case QueryType::BusInfo:		
+		break;
 	}
 }
 	
 std::queue<Query>& InputQueryQueue::Busies() { return AddBusQueryQueue; }
 std::queue<Query>& InputQueryQueue::Stops() { return AddStopQueryQueue; }
-
-
-
-
-
-
-
 

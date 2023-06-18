@@ -16,45 +16,9 @@ using namespace std::literals;
 //===============================================================
 // input_reader tests
 
-//void InputReaderParseBusNameTest() {
-//
+//void ParseRouteTest() {
 //	{
-//		std::stringstream ss(" 256 long   : Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s);
-//		auto result = ParseBusName(ss);
-//		assert( "256 long"s == result.first );
-//		assert(false == result.second);
-//	}
-//
-//	{
-//		std::stringstream ss("256 long: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s);
-//		auto result = ParseBusName(ss);
-//		assert("256 long"s == result.first);
-//		assert(false == result.second);
-//	}
-//
-//	{
-//		std::stringstream ss(" 256 long  \n"s);
-//		auto result = ParseBusName(ss);
-//		assert("256 long"s == result.first);
-//		assert(true == result.second);
-//	}
-//
-//	{
-//		std::stringstream ss("256 long \n"s);
-//		auto result = ParseBusName(ss);
-//		assert("256 long"s == result.first);
-//		assert(true == result.second);
-//	}
-//
-//}
-//
-//void InputReaderParseBusRouteTest() {
-//
-//
-//	{
-//		std::stringstream ss(
-//			" Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s
-//		);		
+//		std::string route = " Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye "s;
 //		std::vector<std::string> ethalon = {
 //			"Biryulyovo Zapadnoye"s,
 //			"Biryusinka"s,
@@ -63,28 +27,30 @@ using namespace std::literals;
 //			"Biryulyovo Passazhirskaya"s,
 //			"Biryulyovo Zapadnoye"s
 //		};
-//		std::vector<std::string> result = ParseBusRoute(ss);
-//		assert(result == ethalon);
+//		auto result = ParseRoute(route);
+//		assert(ethalon == result);
 //	}
 //
 //	{
-//		std::stringstream ss(
-//			" Tolstopaltsevo - Marushkino - Rasskazovka"s
-//		);
+//		std::string route = " Tolstopaltsevo - Marushkino - Rasskazovka "s;
 //		std::vector<std::string> ethalon = {
 //			"Tolstopaltsevo"s,
 //			"Marushkino"s,
 //			"Rasskazovka"s,
 //			"Marushkino"s,
-//			"Tolstopaltsevo"s			
+//			"Tolstopaltsevo"s
 //		};
-//		std::vector<std::string> result = ParseBusRoute(ss);
-//		assert(result == ethalon);
-//	}	
-//
-//
+//		auto result = ParseRoute(route);
+//		assert(ethalon == result);
+//	}
 //}
 
+//void ParseStopCoordinatesTest() {
+//	{
+//		Coordinates ethalon{ 55.581065,  37.648390 };
+//		assert(ethalon == ParseStopCoordinates(" 55.581065,  37.648390 "s));
+//	}
+//}
 
 bool operator==(const Query& lhs, const Query& rhs) {
 	return
@@ -131,18 +97,23 @@ void InputReaderInputOperatorTest() {
 		{ QueryType::BusInfo, "256"s, {}, {} },
 		{ QueryType::BusInfo, "750"s, {}, {} },
 		{ QueryType::BusInfo, "751"s, {}, {} },
-		{ QueryType::Unknown, {}, {}, {} },
-		{ QueryType::Unknown, {}, {}, {} }
+		{ QueryType::Invalid, {}, {}, {} },
+		{ QueryType::Invalid, {}, {}, {} }
 	};
+	
+	
 	std::vector<Query> result;
 	{
 		InputReader input_reader;
 		for (size_t i = 0; i < 15; ++i) {
-			result.push_back( input_reader.GetQuery(iss) );
+			result.push_back(input_reader.GetQuery(iss));
 		}
 	}
 
 	assert(queries_ethalon == result);
+	
+
+
 	std::cout << "InputReaderInputOperatorTest is OK"s << std::endl;
 	
 }

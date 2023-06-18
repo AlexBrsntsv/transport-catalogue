@@ -7,11 +7,10 @@ using namespace std::literals;
 
 
 enum class QueryType {
+	Invalid,
 	AddBus,
 	AddStop,
-	BusInfo,
-	BusOperation,
-	Unknown
+	BusInfo,		
 };
 
 struct Query {
@@ -25,18 +24,17 @@ struct Query {
 
 class InputReader {
 public:
-	Query GetQuery(std::istream& in);
+	Query GetQuery(std::istream& is);
 
 private:
 	inline static const std::string COMMAND_ADD_STOP = "Stop"s;
 	inline static const std::string COMMAND_BUS = "Bus"s;
 
-	static std::pair<std::string, bool> ParseBusName(std::istream& in);
-	static std::vector<std::string> ParseBusRoute(std::istream& in);
-	static Query ParseAddStopCommand(std::istream& in);
-	static std::string TrimWhitespaceSurrounding(const std::string& s);
-	static std::pair<std::string, std::string> Split(std::string line, char by);
-	static QueryType ToQueryType(const std::string& s);
+	static std::string_view TrimWhitespaceSurrounding(std::string_view s);
+	static std::optional<std::pair<std::string_view, std::string_view>> Split(std::string_view line, char by);
+	static std::vector<std::string> ParseRoute(std::string_view s);
+	static Coordinates ParseStopCoordinates(std::string_view s);
+	static Query ParseQuery(std::string_view s);
 };
 
 
@@ -51,6 +49,7 @@ private:
 	std::queue<Query> AddBusQueryQueue;
 };
 
+void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, const Query& q);
+void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, const Query& q);
 
-void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, Query& q);
-void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, Query& q);
+

@@ -55,14 +55,13 @@ struct PairHasher {
 };
 
 
-class TransportCatalogue {
-	using BusInfo = std::tuple<int, int, double>;
+class TransportCatalogue {	
 	
 public:
+	using BusInfo = std::tuple<int, int, double>;
+
 	void AddStop(const Stop& stop);
-
 	const Stop& FindStop(std::string stop_name) const;
-
 	bool AddBus(const std::string& bus_name, const std::vector<std::string>& stops_list );
 	bool AddBus(const BusNew& bus);
 	const Bus& FindBus(std::string bus_name) const;
