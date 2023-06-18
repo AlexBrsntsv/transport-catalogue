@@ -44,9 +44,11 @@ public:
 	void AddQuery(const Query& q);	
 	std::queue<Query>& Busies();
 	std::queue<Query>& Stops();
+	std::queue<Query>& Info();
 private:
 	std::queue<Query> AddStopQueryQueue;
 	std::queue<Query> AddBusQueryQueue;
+	std::queue<Query> GetBusInfoQueryQueue;
 };
 
 void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, const Query& q);

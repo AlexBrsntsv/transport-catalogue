@@ -13,8 +13,6 @@ static const Stop invalid_stop = { ""s, {} };	// unexisted stop
 static const Bus invalid_bus = { ""s, {} };		// unexisted bus
 
 
-
-
 static bool StopIsValid(const Stop& stop) {	
 	return !stop.name.empty();
 }
@@ -92,7 +90,7 @@ std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::s
 	std::vector<const Stop*> unique_stops(bus.route.begin(), bus.route.end());
 	std::sort(unique_stops.begin(), unique_stops.end());
 	unique_stops.erase( std::unique( unique_stops.begin(), unique_stops.end() ), unique_stops.end() );
-	std::vector<double> distances(bus.route.size());
+	std::vector<double> distances( bus.route.size() - 1 );
 	std::transform(
 		std::next(bus.route.begin()),
 		bus.route.end(),

@@ -70,7 +70,7 @@ Query InputReader::ParseQuery(std::string_view s) {
 	s = TrimWhitespaceSurrounding(s); // remove spaces
 	Query q{};
 
-	if (auto opt = Split(s, ':'); opt->first != s) {
+	if (auto opt = Split(s, ':'); opt.has_value() && opt->first != s) {
 		if (opt->first.substr(0, COMMAND_BUS.size()) == COMMAND_BUS) {
 			q.type = QueryType::AddBus;
 			opt->first.remove_prefix(COMMAND_BUS.size());
@@ -119,7 +119,6 @@ void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, const Query& q
 	transport_catalogue.AddBus( q.bus_new );
 }
 
-
 void InputQueryQueue::AddQuery(const Query& q) {
 	switch (q.type) {
 	case QueryType::AddBus:
@@ -130,12 +129,15 @@ void InputQueryQueue::AddQuery(const Query& q) {
 		AddStopQueryQueue.push(q);
 		break;
 
-	case QueryType::Invalid:
-	case QueryType::BusInfo:		
+	case QueryType::BusInfo:
+		GetBusInfoQueryQueue.push(q);
+		break;
+
+	case QueryType::Invalid:		
 		break;
 	}
 }
 	
 std::queue<Query>& InputQueryQueue::Busies() { return AddBusQueryQueue; }
 std::queue<Query>& InputQueryQueue::Stops() { return AddStopQueryQueue; }
-
+std::queue<Query>& InputQueryQueue::Info() { return GetBusInfoQueryQueue; }

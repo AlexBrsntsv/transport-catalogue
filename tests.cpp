@@ -218,11 +218,6 @@ void TransportCatalogueAddBusTest() {
 
 	std::cout << "TransportCatalogueAddBusTest is OK"s << std::endl;
 
-
-
-
-
-
 }
 
 

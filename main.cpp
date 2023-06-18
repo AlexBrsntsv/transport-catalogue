@@ -7,24 +7,21 @@
 #include "stat_reader.h"
 using namespace std;
 
-
-
+int ReadNumber(std::istream& is) {		
+	std::string s;
+	std::getline(is, s);
+	return std::stoi(s);
+}
 
 int main() {
-	
-	InputReaderRunTests();
-	std::cout << "OK"s << std::endl;
-	/*
-	TransportCatalogueRunTests();
-	InputReaderRunTests();	
+
+	//TransportCatalogueRunTests();
+	//InputReaderRunTests();	
 	TransportCatalogue transport_catalogue;
 	InputQueryQueue input_queue;
 	static InputReader input_reader;
-
-	size_t cmd_num = 0;
-	std::cin >> cmd_num;	
 		
-	for (size_t i = 0; i < cmd_num; ++i) {
+	for (size_t i = ReadNumber(std::cin); i > 0; --i) {
 		input_queue.AddQuery( input_reader.GetQuery(std::cin) );
 	}
 	
@@ -38,11 +35,14 @@ int main() {
 		input_queue.Busies().pop();
 	}
 
-	std::cin >> cmd_num;
-	for (size_t i = 0; i < cmd_num; ++i) {
-		Query q = input_reader.GetQuery(std::cin);
-		std::cout << ShowBusInfo(transport_catalogue, q.bus_name_info);		
+	for (size_t i = ReadNumber(std::cin); i > 0; --i) {
+		input_queue.AddQuery(input_reader.GetQuery(std::cin));
 	}
-	*/
+
+	while (!input_queue.Info().empty()) {
+		std::cout << ShowBusInfo(transport_catalogue, input_queue.Info().front().bus_name_info) << std::endl;
+		input_queue.Info().pop();
+	}
+	
 	return 0;
 }
