@@ -71,16 +71,16 @@ Query InputReader::ParseQuery(std::string_view s) {
 	Query q{};
 
 	if (auto opt = Split(s, ':'); opt.has_value() && opt->first != s) {
-		if (opt->first.substr(0, COMMAND_BUS.size()) == COMMAND_BUS) {
+		if (opt->first.substr(0, COMMANDS_BUS.size()) == COMMANDS_BUS) {
 			q.type = QueryType::AddBus;
-			opt->first.remove_prefix(COMMAND_BUS.size());
+			opt->first.remove_prefix(COMMANDS_BUS.size());
 			q.bus_new.name = std::string( TrimWhitespaceSurrounding(opt->first) );
 			auto route = ParseRoute(opt->second);
 			q.bus_new.route.swap(route);
 			return q;
 		}
-		else if (opt->first.substr( 0, COMMAND_ADD_STOP.size() ) == COMMAND_ADD_STOP) {
-			opt->first.remove_prefix( COMMAND_ADD_STOP.size() );
+		else if (opt->first.substr( 0, COMMANDS_STOP.size() ) == COMMANDS_STOP) {
+			opt->first.remove_prefix( COMMANDS_STOP.size() );
 			q.type = QueryType::AddStop;
 			q.stop.name = std::string( TrimWhitespaceSurrounding(opt->first) );
 			q.stop.coordinates = ParseStopCoordinates(opt->second);
@@ -92,10 +92,16 @@ Query InputReader::ParseQuery(std::string_view s) {
 		}
 	}
 	else {
-		if (s.substr(0, COMMAND_BUS.size()) == COMMAND_BUS) {
+		if (s.substr(0, COMMANDS_BUS.size()) == COMMANDS_BUS) {
 			q.type = QueryType::BusInfo;
-			s.remove_prefix(COMMAND_BUS.size());
+			s.remove_prefix(COMMANDS_BUS.size());
 			q.bus_name_info = std::string( TrimWhitespaceSurrounding(s) );
+			return q;
+		}
+		else if( s.substr(0, COMMANDS_STOP.size()) == COMMANDS_STOP){
+			q.type = QueryType::StopInfo;
+			s.remove_prefix(COMMANDS_STOP.size());
+			q.stop_name_info = std::string(TrimWhitespaceSurrounding(s));
 			return q;
 		}
 		else {
@@ -129,8 +135,9 @@ void InputQueryQueue::AddQuery(const Query& q) {
 		AddStopQueryQueue.push(q);
 		break;
 
+	case QueryType::StopInfo:
 	case QueryType::BusInfo:
-		GetBusInfoQueryQueue.push(q);
+		GetInfoQueryQueue.push(q);
 		break;
 
 	case QueryType::Invalid:		
@@ -140,4 +147,4 @@ void InputQueryQueue::AddQuery(const Query& q) {
 	
 std::queue<Query>& InputQueryQueue::Busies() { return AddBusQueryQueue; }
 std::queue<Query>& InputQueryQueue::Stops() { return AddStopQueryQueue; }
-std::queue<Query>& InputQueryQueue::Info() { return GetBusInfoQueryQueue; }
+std::queue<Query>& InputQueryQueue::Info() { return GetInfoQueryQueue; }

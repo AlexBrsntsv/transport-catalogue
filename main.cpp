@@ -14,6 +14,9 @@ int ReadNumber(std::istream& is) {
 }
 
 int main() {
+	//InputReaderRunTests();
+	//TransportCatalogueRunTests();
+	
 
 	//TransportCatalogueRunTests();
 	//InputReaderRunTests();	
@@ -40,7 +43,7 @@ int main() {
 	}
 
 	while (!input_queue.Info().empty()) {
-		std::cout << ShowBusInfo(transport_catalogue, input_queue.Info().front().bus_name_info) << std::endl;
+		std::cout << ShowInfo(transport_catalogue, input_queue.Info().front()) << std::endl;
 		input_queue.Info().pop();
 	}
 	

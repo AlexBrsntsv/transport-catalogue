@@ -71,6 +71,10 @@ bool TransportCatalogue::AddBus(const BusNew& bus) {
 	}
 	buses_.push_back(bus_to_add);
 	busname_to_bus_[buses_.back().name] = &buses_.back();
+	// for Sop X command
+	for (const auto& stop : bus_to_add.route) {
+		stop_to_buses_[stop].push_back( &buses_.back() );
+	}
 	return true;
 }
 
@@ -109,4 +113,24 @@ std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::s
 	
 	return BusInfo{ bus.route.size(),unique_stops.size(), distance };
 
+}
+
+std::optional<std::vector<std::string_view>> TransportCatalogue::GetBusesForStop(const std::string& stop_name) const {
+	std::vector<std::string_view> result;
+	if (const Stop& stop = FindStop(stop_name); StopIsValid(stop)) {
+		if (const auto it = stop_to_buses_.find(&stop); it != stop_to_buses_.end()) {
+			for (const Bus* bus : it->second) {
+				result.push_back(std::string_view(bus->name));
+			}
+			std::sort(result.begin(), result.end());
+			result.erase(std::unique(result.begin(), result.end()), result.end());
+		}
+		else {
+			return result;
+		}
+	}
+	else {
+		return std::nullopt;
+	}
+	return result;
 }

@@ -78,34 +78,38 @@ void InputReaderInputOperatorTest() {
 		"Bus 750\n"s
 		"Bus    751\n"s
 		"SBus    751\n"s
-		"Stap Biryulyovo Passazhirskaya : 55.580999, 37.659164"s
+		"Stap Biryulyovo Passazhirskaya : 55.580999, 37.659164\n"s
+		"Stop Biryulyovo Passazhirskaya\n"s
+		"Stop Universam"s
 	);
 
 	
 		
 	std::vector<Query> queries_ethalon = {
-		{ QueryType::AddStop, {}, {}, {"Tolstopaltsevo"s,55.611087, 37.208290}},
-		{ QueryType::AddStop, {},{}, {"Marushkino"s,55.595884, 37.209755} },
-		{ QueryType::AddBus, {}, BusNew{"256"s, {"Biryulyovo Zapadnoye"s, "Biryusinka"s, "Universam"s, "Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, "Biryulyovo Zapadnoye"s} },{} },
-		{ QueryType::AddBus, {}, BusNew{"750"s, {"Tolstopaltsevo"s, "Marushkino"s, "Rasskazovka"s, "Marushkino"s, "Tolstopaltsevo"s} }, {} },
-		{ QueryType::AddStop, {}, {}, {"Rasskazovka"s,55.632761, 37.333324} },
-		{ QueryType::AddStop, {}, {}, {"Biryulyovo Zapadnoye"s,55.574371, 37.651700} },
-		{ QueryType::AddStop, {}, {}, {"Biryusinka"s,55.581065, 37.648390} },
-		{ QueryType::AddStop, {}, {}, {"Universam"s,55.587655, 37.645687} },
-		{ QueryType::AddStop, {}, {}, {"Biryulyovo Tovarnaya"s,55.592028, 37.653656} },
-		{ QueryType::AddStop, {}, {}, {"Biryulyovo Passazhirskaya"s,55.580999, 37.659164} },
-		{ QueryType::BusInfo, "256"s, {}, {} },
-		{ QueryType::BusInfo, "750"s, {}, {} },
-		{ QueryType::BusInfo, "751"s, {}, {} },
-		{ QueryType::Invalid, {}, {}, {} },
-		{ QueryType::Invalid, {}, {}, {} }
+		{ QueryType::AddStop, {}, {}, {}, {"Tolstopaltsevo"s,55.611087, 37.208290}},
+		{ QueryType::AddStop, {}, {}, {}, {"Marushkino"s,55.595884, 37.209755} },
+		{ QueryType::AddBus, {}, {}, BusNew{"256"s, {"Biryulyovo Zapadnoye"s, "Biryusinka"s, "Universam"s, "Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, "Biryulyovo Zapadnoye"s} },{} },
+		{ QueryType::AddBus, {}, {}, BusNew{"750"s, {"Tolstopaltsevo"s, "Marushkino"s, "Rasskazovka"s, "Marushkino"s, "Tolstopaltsevo"s} }, {} },
+		{ QueryType::AddStop, {}, {}, {}, {"Rasskazovka"s,55.632761, 37.333324} },
+		{ QueryType::AddStop, {}, {}, {}, {"Biryulyovo Zapadnoye"s,55.574371, 37.651700} },
+		{ QueryType::AddStop, {}, {}, {}, {"Biryusinka"s,55.581065, 37.648390} },
+		{ QueryType::AddStop, {}, {}, {}, {"Universam"s,55.587655, 37.645687} },
+		{ QueryType::AddStop, {}, {}, {}, {"Biryulyovo Tovarnaya"s,55.592028, 37.653656} },
+		{ QueryType::AddStop, {}, {}, {}, {"Biryulyovo Passazhirskaya"s,55.580999, 37.659164} },
+		{ QueryType::BusInfo, {}, "256"s, {}, {} },
+		{ QueryType::BusInfo, {}, "750"s, {}, {} },
+		{ QueryType::BusInfo, {}, "751"s, {}, {} },
+		{ QueryType::Invalid, {}, {}, {}, {} },
+		{ QueryType::Invalid, {}, {}, {}, {}},
+		{ QueryType::StopInfo, "Biryulyovo Passazhirskaya"s, {}, {}, {} },
+		{ QueryType::StopInfo, "Universam"s, {}, {}, {} }
 	};
 	
 	
 	std::vector<Query> result;
 	{
 		InputReader input_reader;
-		for (size_t i = 0; i < 15; ++i) {
+		for (size_t i = 0; i < 17; ++i) {
 			result.push_back(input_reader.GetQuery(iss));
 		}
 	}
@@ -221,8 +225,52 @@ void TransportCatalogueAddBusTest() {
 }
 
 
+void TestGetBusesForStop() {
+
+	using namespace std::literals;
+
+	std::vector<Stop> stops = {
+		{ "Airport"s, {52.525354, 25.252627} },
+		{ "Novokuznetsovo"s, {47.474849, 35.353637} },
+		{ "Abzakovo"s, {23.232425, 29.293031} },
+		{ "Staleleteinaya"s, {18.181920, 11.111213} },
+		{ "Pokrovskaya"s, {20.202122, 56.565758} },
+		{ "Marushkino"s, {55.595884, 37.209755} },
+		{ "Tolstopaltsevo"s, {55.611087, 37.208290} },
+		{ "Rasskazovka"s, {55.632761, 37.333324} },
+		{ "Biryulyovo Zapadnoye"s, {55.574371, 37.651700} },
+		{ "Universam"s, {55.587655, 37.645687} },
+		{ "Biryulyovo Tovarnaya"s, {55.592028, 37.653656} },
+		{ "Biryulyovo Passazhirskaya"s, {55.580999, 37.659164} }
+	};
+
+	
+	
+	TransportCatalogue transport_catalogue;
+	for (const Stop& stop : stops) {
+		transport_catalogue.AddStop(stop);
+	}
+	// success operations
+	transport_catalogue.AddBus(BusNew{ "811"s, { "Abzakovo"s, "Rasskazovka"s, "Marushkino"s, "Staleleteinaya"s, "Novokuznetsovo"s } });
+	transport_catalogue.AddBus(BusNew{ "100"s, { "Biryulyovo Zapadnoye"s, "Marushkino"s, "Universam"s, "Biryulyovo Passazhirskaya"s } });
+	{
+		std::vector<std::string_view> ethalon = { "100"sv, "811"sv };
+		assert(ethalon == transport_catalogue.GetBusesForStop("Marushkino"s).value());
+	}
+	{
+		std::vector<std::string_view> ethalon = { "811"sv };
+		assert(ethalon == transport_catalogue.GetBusesForStop("Abzakovo"s).value());
+	}
+	std::cout << "TestGetBusesForStop is OK"s << std::endl;
+	
+
+}
+
+
+
 void TransportCatalogueRunTests() {
 	//TransportCatalogueMethodsForStopTest();
 	TransportCatalogueAddBusTest();
+	TestGetBusesForStop();
 
 }

@@ -33,3 +33,44 @@ std::string ShowBusInfo(const TransportCatalogue& transport_catalogue, const std
 		return BusInfoErrorMessage(bus_name);
 	}
 }
+
+
+std::string StopInfoErrorMessage(const std::string& stop_name) {
+	return "Stop "s + stop_name + ": not found"s;
+}
+
+std::string StopInfoEmptyMessage(const std::string& stop_name) {
+	return "Stop "s + stop_name + ": no buses"s;
+}
+
+std::string StopInfoMessage(const std::string& stop_name, std::vector<std::string_view> buses) {
+	std::string result = "Stop "s + stop_name + ": buses"s;
+	for (std::string_view bus : buses) {
+		result += ' ';
+		result += std::string(bus);
+	}
+	return result;
+}
+
+std::string ShowStopInfo(const TransportCatalogue& transport_catalogue, const std::string& stop_name) {
+	if (const auto opt_stop_info = transport_catalogue.GetBusesForStop(stop_name); opt_stop_info.has_value()) {
+		if (opt_stop_info.value().empty()) return StopInfoEmptyMessage(stop_name);
+		else return StopInfoMessage(stop_name, opt_stop_info.value());
+	}
+	else {
+		return StopInfoErrorMessage(stop_name);
+	}
+}
+
+
+std::string ShowInfo(const TransportCatalogue& tc, const Query& q) {
+	if (q.type == QueryType::BusInfo) {
+		return ( ShowBusInfo(tc, q.bus_name_info) );
+	}
+	else if (q.type == QueryType::StopInfo) {
+		return (ShowStopInfo(tc, q.stop_name_info));
+	}
+	else {
+		return "error"s;
+	}
+}

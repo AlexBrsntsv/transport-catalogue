@@ -10,11 +10,13 @@ enum class QueryType {
 	Invalid,
 	AddBus,
 	AddStop,
-	BusInfo,		
+	BusInfo,
+	StopInfo
 };
 
 struct Query {
 	QueryType type;
+	std::string stop_name_info;
 	std::string bus_name_info;
 	BusNew bus_new;
 	Stop stop;
@@ -27,8 +29,8 @@ public:
 	Query GetQuery(std::istream& is);
 
 private:
-	inline static const std::string COMMAND_ADD_STOP = "Stop"s;
-	inline static const std::string COMMAND_BUS = "Bus"s;
+	inline static const std::string COMMANDS_STOP = "Stop"s;
+	inline static const std::string COMMANDS_BUS = "Bus"s;
 
 	static std::string_view TrimWhitespaceSurrounding(std::string_view s);
 	static std::optional<std::pair<std::string_view, std::string_view>> Split(std::string_view line, char by);
@@ -48,7 +50,7 @@ public:
 private:
 	std::queue<Query> AddStopQueryQueue;
 	std::queue<Query> AddBusQueryQueue;
-	std::queue<Query> GetBusInfoQueryQueue;
+	std::queue<Query> GetInfoQueryQueue;
 };
 
 void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, const Query& q);

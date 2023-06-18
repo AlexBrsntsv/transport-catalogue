@@ -48,9 +48,15 @@ void PrintBus(const Bus& bus);
 
 
 struct PairHasher {	
-	size_t operator()(const std::pair<Stop*, Stop*>& p) {
+	size_t operator()(const std::pair<const Stop*, const Stop*>& p) {
 		size_t prime_number = 37;
 		return reinterpret_cast<size_t>(p.first) + reinterpret_cast<size_t>(p.second) * prime_number;
+	}
+};
+
+struct StopPtrHasher {
+	size_t operator()(const Stop* stop_ptr) const {			
+		return std::hash<long long>{}( reinterpret_cast<long long>(stop_ptr) );
 	}
 };
 
@@ -66,6 +72,7 @@ public:
 	bool AddBus(const BusNew& bus);
 	const Bus& FindBus(std::string bus_name) const;
 	std::optional<BusInfo> GetBusInfo(std::string bus_name) const;
+	std::optional<std::vector<std::string_view>> GetBusesForStop(const std::string& stop_name) const;
 
 
 private:
@@ -73,5 +80,6 @@ private:
 	std::unordered_map<std::string_view, const Stop*, std::hash<std::string_view>> stopname_to_stop_;	// хеш таблица для быстрого поиска по структуре stops_
 	std::deque<Bus> buses_;																				// структура данных, содержащая данные об автобусахы
 	std::unordered_map<std::string_view, const Bus*, std::hash<std::string_view>> busname_to_bus_;		// хеш таблица для быстрого поиска по структуре buses_
-	std::unordered_map<std::pair<Stop*, Stop*>, double, PairHasher> stop_to_stop_distances_;
+	std::unordered_map<std::pair<const Stop*, const Stop*>, double, PairHasher> stop_to_stop_distances_;
+	std::unordered_map<const Stop*, std::vector<const Bus*>, StopPtrHasher> stop_to_buses_;
 };
