@@ -88,32 +88,22 @@ const Bus& TransportCatalogue::FindBus(std::string bus_name) const {
 	}
 }
 
+int TransportCatalogue::GetUniqueStopsNum(const Bus& bus) const {
+	std::vector<const Stop*> unique_stops(bus.route.begin(), bus.route.end());
+	std::sort(unique_stops.begin(), unique_stops.end());
+	unique_stops.erase(std::unique(unique_stops.begin(), unique_stops.end()), unique_stops.end());
+	return static_cast<int>( unique_stops.size() );
+}
+
+
 std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::string bus_name) const {
 	const Bus& bus = FindBus(bus_name);
 	if (!BusIsValid(bus)) return std::nullopt;
-	std::vector<const Stop*> unique_stops(bus.route.begin(), bus.route.end());
-	std::sort(unique_stops.begin(), unique_stops.end());
-	unique_stops.erase( std::unique( unique_stops.begin(), unique_stops.end() ), unique_stops.end() );
-	std::vector<double> distances( bus.route.size() - 1 );
-	std::transform(
-		std::next(bus.route.begin()),
-		bus.route.end(),
-		bus.route.begin(),
-		distances.begin(),
-		[](const auto lhs, const auto rhs) {
-			return ComputeDistance(lhs->coordinates, rhs->coordinates);
-		}
-	);
-	double distance = std::reduce(
-		distances.begin(),
-		distances.end(),
-		0.0,
-		std::plus<>()
-	);
-	
-	return BusInfo{ bus.route.size(),unique_stops.size(), distance };
-
+	double factitial_length = CalculateRouteLengthViaLengths(bus);
+	double geographical_length = CalculateRouteLengthViaCoordinates(bus);
+	return BusInfo{ bus.route.size(),GetUniqueStopsNum(bus), factitial_length, factitial_length / geographical_length };
 }
+
 
 std::optional<std::vector<std::string_view>> TransportCatalogue::GetBusesForStop(const std::string& stop_name) const {
 	std::vector<std::string_view> result;
@@ -135,23 +125,77 @@ std::optional<std::vector<std::string_view>> TransportCatalogue::GetBusesForStop
 	return result;
 }
 
-bool TransportCatalogue::AddDistanceBetweenStops(std::string name_from, std::string name_to, double distance) {
+void TransportCatalogue::AddStopsLength(std::string name_from, std::string name_to, double length) {
 	const Stop& stop_from = FindStop(name_from);
-	if (!StopIsValid(stop_from)) return false;
+	if (!StopIsValid(stop_from)) return;
 
 	const Stop& stop_to = FindStop(name_to);
-	if (!StopIsValid(stop_to)) return false;
+	if (!StopIsValid(stop_to)) return;
 
-	stop_to_stop_distances_[ { &stop_from, &stop_to } ] = distance;
+	stop_to_stop_distances_[ { &stop_from, &stop_to } ] = length;
 
 	if (const auto it = stop_to_stop_distances_.find({ &stop_to, &stop_from }); it == stop_to_stop_distances_.end()) {
-		stop_to_stop_distances_[{ &stop_to, &stop_from }] = distance;
-	}
-
-	return false;
+		stop_to_stop_distances_[{ &stop_to, &stop_from }] = length;
+	}	
 }
 
 
+
+double TransportCatalogue::CalculateRouteLengthViaCoordinates(const Bus& bus) const {
+	std::vector<double> distances(bus.route.size() - 1);
+	std::transform(
+		std::next(bus.route.begin()),
+		bus.route.end(),
+		bus.route.begin(),
+		distances.begin(),
+		[](const auto lhs, const auto rhs) {
+			return ComputeDistance(lhs->coordinates, rhs->coordinates);
+		}
+	);
+	double distance = std::reduce(
+		distances.begin(),
+		distances.end(),
+		0.0,
+		std::plus<>()
+	);
+	return distance;
+}
+
+double TransportCatalogue::CalculateRouteLengthViaLengths(const Bus& bus) const {
+	std::vector<double> distances(bus.route.size() - 1);
+	std::transform(
+		std::next(bus.route.begin()),
+		bus.route.end(),
+		bus.route.begin(),
+		distances.begin(),
+		[this](const auto lhs, const auto rhs) {
+			return this->GetStopsLength(*lhs, *rhs);
+		}
+	);
+	double distance = std::reduce(
+		distances.begin(),
+		distances.end(),
+		0.0,
+		std::plus<>()
+	);
+	return distance;
+}
+
+
+double TransportCatalogue::GetStopsLength(const Stop& stop_from, const Stop& stop_to) const {
+	//return stop_to_stop_distances_.at({ &stop_from, &stop_to });	
+	return stop_to_stop_distances_.at({ &stop_from, &stop_to });
+
+	
+}
+
+
+
+
+
+
+
+/*
 std::optional<double> TransportCatalogue::GetDistanceBetweenStops(std::string name_from, std::string name_to) const {
 	const Stop& stop_from = FindStop(name_from);
 	if (!StopIsValid(stop_from)) return std::nullopt;
@@ -166,3 +210,23 @@ std::optional<double> TransportCatalogue::GetDistanceBetweenStops(std::string na
 		return (ComputeDistance(stop_from.coordinates, stop_to.coordinates));
 	}	
 }
+
+double TransportCatalogue::GetStopsDistance(const Stop& stop_from, const Stop& stop_to) const {
+	if (const auto it = stop_to_stop_distances_.find({ &stop_from, &stop_to }); it != stop_to_stop_distances_.end()) {
+		return (it->second);
+	}
+	else {
+		return (ComputeDistance(stop_from.coordinates, stop_to.coordinates));
+	}
+}
+*/
+
+//double TransportCatalogue::ComputeStopsDistanceViaCoordinates(const Stop& stop_from, const Stop& stop_to) const {
+//	return (ComputeDistance(stop_from.coordinates, stop_to.coordinates));
+//}
+//
+//double TransportCatalogue::ComputeStopsDistanceViaLengths(const Stop& stop_from, const Stop& stop_to) const {
+//	return stop_to_stop_distances_.at({ &stop_from, &stop_to });
+//
+//
+//}

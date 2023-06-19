@@ -148,6 +148,13 @@ void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, const Query& 
 	transport_catalogue.AddStop(q.stop);
 }
 
+void ProccessAddStopsLengthsQuery(TransportCatalogue& transport_catalogue, const Query& q) {
+	for (const auto& [to_stop, distance] : q.stop_distancies) {
+		transport_catalogue.AddStopsLength(q.stop.name, to_stop, distance);
+	}
+}
+
+
 void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, const Query& q) {
 	transport_catalogue.AddBus( q.bus_new );
 }
@@ -159,7 +166,13 @@ void InputQueryQueue::AddQuery(const Query& q) {
 		break;
 
 	case QueryType::AddStop:
-		AddStopQueryQueue.push(q);
+		if (q.stop_distancies.empty()) {
+			AddStopQueryQueue.push(q);
+		}
+		else {
+			AddStopQueryQueue.push({ QueryType::AddStop, {},{},{},q.stop,{} });			
+			AddStopsLengthsQueryQueue.push(q);			
+		}
 		break;
 
 	case QueryType::StopInfo:
@@ -175,3 +188,6 @@ void InputQueryQueue::AddQuery(const Query& q) {
 std::queue<Query>& InputQueryQueue::Busies() { return AddBusQueryQueue; }
 std::queue<Query>& InputQueryQueue::Stops() { return AddStopQueryQueue; }
 std::queue<Query>& InputQueryQueue::Info() { return GetInfoQueryQueue; }
+std::queue<Query>& InputQueryQueue::Lengths() { return AddStopsLengthsQueryQueue; }
+
+

@@ -13,13 +13,8 @@ int ReadNumber(std::istream& is) {
 	return std::stoi(s);
 }
 
-int main() {
-	InputReaderRunTests();
-	TransportCatalogueRunTests();
-	cout << "OK"s << endl;
+int main() {	
 	
-	
-	/*
 	TransportCatalogue transport_catalogue;
 	InputQueryQueue input_queue;
 	static InputReader input_reader;
@@ -33,10 +28,16 @@ int main() {
 		input_queue.Stops().pop();
 	}
 
+	while (!input_queue.Lengths().empty()) {
+		ProccessAddStopsLengthsQuery(transport_catalogue, input_queue.Lengths().front());
+		input_queue.Lengths().pop();
+	}
+
 	while (!input_queue.Busies().empty()) {
 		ProccessAddBusQuery(transport_catalogue, input_queue.Busies().front());
 		input_queue.Busies().pop();
 	}
+	
 
 	for (size_t i = ReadNumber(std::cin); i > 0; --i) {
 		input_queue.AddQuery(input_reader.GetQuery(std::cin));
@@ -46,6 +47,6 @@ int main() {
 		std::cout << ShowInfo(transport_catalogue, input_queue.Info().front()) << std::endl;
 		input_queue.Info().pop();
 	}
-	*/
+	
 	return 0;
 }

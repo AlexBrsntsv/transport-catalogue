@@ -8,7 +8,8 @@
 #include <tuple>
 #include <functional>
 #include <optional>
-
+#include <algorithm>
+#include <numeric>
 
 
 struct Stop {
@@ -64,10 +65,13 @@ struct StopPtrHasher {
 class TransportCatalogue {	
 	
 public:
-	using BusInfo = std::tuple<int, int, double>;
+	using BusInfo = std::tuple<int, int, double, double>;
 
-	bool AddDistanceBetweenStops(std::string name_from, std::string name_to, double distance);
-	std::optional<double> GetDistanceBetweenStops(std::string name_from, std::string name_to) const;
+	void  AddStopsLength(std::string name_from, std::string name_to, double length);
+	double GetStopsLength(const Stop& stop_from, const Stop& stop_to) const;
+	//std::optional<double> GetDistanceBetweenStops(std::string name_from, std::string name_to) const;
+	//double GetStopsDistance(const Stop& stop_from, const Stop& stop_to) const;
+
 	void AddStop(const Stop& stop);
 	const Stop& FindStop(std::string stop_name) const;
 	bool AddBus(const std::string& bus_name, const std::vector<std::string>& stops_list );
@@ -77,7 +81,15 @@ public:
 	std::optional<std::vector<std::string_view>> GetBusesForStop(const std::string& stop_name) const;
 
 
+	double CalculateRouteLengthViaCoordinates(const Bus& bus) const;
+	double CalculateRouteLengthViaLengths(const Bus& bus) const;
+
+	//double ComputeStopsDistanceViaCoordinates(const Stop& stop_from, const Stop& stop_to) const;
+	//double ComputeStopsDistanceViaLengths(const Stop& stop_from, const Stop& stop_to) const;
+
 private:
+
+	int GetUniqueStopsNum(const Bus& bus) const;
 	std::deque<Stop> stops_;																			// структура данных содержащая остановки
 	std::unordered_map<std::string_view, const Stop*, std::hash<std::string_view>> stopname_to_stop_;	// хеш таблица для быстрого поиска по структуре stops_
 	std::deque<Bus> buses_;																				// структура данных, содержащая данные об автобусахы
@@ -85,3 +97,6 @@ private:
 	std::unordered_map<std::pair<const Stop*, const Stop*>, double, PairHasher> stop_to_stop_distances_;
 	std::unordered_map<const Stop*, std::vector<const Bus*>, StopPtrHasher> stop_to_buses_;
 };
+
+
+

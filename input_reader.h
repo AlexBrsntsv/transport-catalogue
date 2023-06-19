@@ -50,7 +50,9 @@ public:
 	std::queue<Query>& Busies();
 	std::queue<Query>& Stops();
 	std::queue<Query>& Info();
+	std::queue<Query>& Lengths();
 private:
+	std::queue<Query> AddStopsLengthsQueryQueue;
 	std::queue<Query> AddStopQueryQueue;
 	std::queue<Query> AddBusQueryQueue;
 	std::queue<Query> GetInfoQueryQueue;
@@ -58,6 +60,6 @@ private:
 
 void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, const Query& q);
 void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, const Query& q);
-
+void ProccessAddStopsLengthsQuery(TransportCatalogue& transport_catalogue, const Query& q);
 
 //test

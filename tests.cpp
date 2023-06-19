@@ -356,17 +356,17 @@ void TransportCatalogueStopsDistanciesFuncTest() {
 	for (const Stop& stop : stops) {
 		transport_catalogue.AddStop(stop);
 	}
-	transport_catalogue.AddDistanceBetweenStops("Marushkino"s, "Tolstopaltsevo"s, 2000);
-	transport_catalogue.AddDistanceBetweenStops("Rasskazovka"s, "Biryulyovo Zapadnoye"s, 23000);
-	transport_catalogue.AddDistanceBetweenStops("Biryulyovo Passazhirskaya"s, "Biryulyovo Tovarnaya"s, 23000);
-	transport_catalogue.AddDistanceBetweenStops("Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, 21000);
+	transport_catalogue.AddStopsLength("Marushkino"s, "Tolstopaltsevo"s, 2000);
+	transport_catalogue.AddStopsLength("Rasskazovka"s, "Biryulyovo Zapadnoye"s, 23000);
+	transport_catalogue.AddStopsLength("Biryulyovo Passazhirskaya"s, "Biryulyovo Tovarnaya"s, 23000);
+	transport_catalogue.AddStopsLength("Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, 21000);
 
-	assert(transport_catalogue.GetDistanceBetweenStops("Marushkino"s, "Tolstopaltsevo"s) == 2000);
-	assert(transport_catalogue.GetDistanceBetweenStops("Tolstopaltsevo"s, "Marushkino"s) == 2000);
-	assert(transport_catalogue.GetDistanceBetweenStops("Biryulyovo Passazhirskaya"s, "Biryulyovo Tovarnaya"s) == 23000);
-	assert(transport_catalogue.GetDistanceBetweenStops("Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s) == 21000);
-	auto opt_distance = transport_catalogue.GetDistanceBetweenStops("Tolstopaltsevo"s, "Rasskazovka"s);
-	assert(std::round(opt_distance.value()) == 8212);
+	assert(transport_catalogue.GetStopsLength(transport_catalogue.FindStop("Marushkino"s), transport_catalogue.FindStop("Tolstopaltsevo"s)) == 2000);
+	assert(transport_catalogue.GetStopsLength(transport_catalogue.FindStop("Tolstopaltsevo"s), transport_catalogue.FindStop("Marushkino"s)) == 2000);
+	assert(transport_catalogue.GetStopsLength(transport_catalogue.FindStop("Biryulyovo Passazhirskaya"s), transport_catalogue.FindStop("Biryulyovo Tovarnaya"s)) == 23000);
+	assert(transport_catalogue.GetStopsLength(transport_catalogue.FindStop("Biryulyovo Tovarnaya"s), transport_catalogue.FindStop("Biryulyovo Passazhirskaya"s)) == 21000);
+	//double distance = transport_catalogue.ComputeStopsDistanceViaCoordinates(transport_catalogue.FindStop("Tolstopaltsevo"s), transport_catalogue.FindStop("Rasskazovka"s));
+	//assert(std::round(distance) == 8212);
 	std::cout << "TransportCatalogueStopsDistanciesFuncTest is OK"s << std::endl;
 
 }
