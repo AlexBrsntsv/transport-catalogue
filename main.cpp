@@ -15,6 +15,7 @@ int ReadNumber(std::istream& is) {
 
 int main() {
 	InputReaderRunTests();
+	TransportCatalogueRunTests();
 	cout << "OK"s << endl;
 	
 	

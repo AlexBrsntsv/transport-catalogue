@@ -48,7 +48,7 @@ void PrintBus(const Bus& bus);
 
 
 struct PairHasher {	
-	size_t operator()(const std::pair<const Stop*, const Stop*>& p) {
+	size_t operator()(const std::pair<const Stop*, const Stop*>& p) const {
 		size_t prime_number = 37;
 		return reinterpret_cast<size_t>(p.first) + reinterpret_cast<size_t>(p.second) * prime_number;
 	}
@@ -66,6 +66,8 @@ class TransportCatalogue {
 public:
 	using BusInfo = std::tuple<int, int, double>;
 
+	bool AddDistanceBetweenStops(std::string name_from, std::string name_to, double distance);
+	std::optional<double> GetDistanceBetweenStops(std::string name_from, std::string name_to) const;
 	void AddStop(const Stop& stop);
 	const Stop& FindStop(std::string stop_name) const;
 	bool AddBus(const std::string& bus_name, const std::vector<std::string>& stops_list );

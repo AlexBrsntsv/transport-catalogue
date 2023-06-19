@@ -134,3 +134,35 @@ std::optional<std::vector<std::string_view>> TransportCatalogue::GetBusesForStop
 	}
 	return result;
 }
+
+bool TransportCatalogue::AddDistanceBetweenStops(std::string name_from, std::string name_to, double distance) {
+	const Stop& stop_from = FindStop(name_from);
+	if (!StopIsValid(stop_from)) return false;
+
+	const Stop& stop_to = FindStop(name_to);
+	if (!StopIsValid(stop_to)) return false;
+
+	stop_to_stop_distances_[ { &stop_from, &stop_to } ] = distance;
+
+	if (const auto it = stop_to_stop_distances_.find({ &stop_to, &stop_from }); it == stop_to_stop_distances_.end()) {
+		stop_to_stop_distances_[{ &stop_to, &stop_from }] = distance;
+	}
+
+	return false;
+}
+
+
+std::optional<double> TransportCatalogue::GetDistanceBetweenStops(std::string name_from, std::string name_to) const {
+	const Stop& stop_from = FindStop(name_from);
+	if (!StopIsValid(stop_from)) return std::nullopt;
+
+	const Stop& stop_to = FindStop(name_to);
+	if (!StopIsValid(stop_to)) return  std::nullopt;
+	
+	if (const auto it = stop_to_stop_distances_.find({ &stop_from, &stop_to }); it != stop_to_stop_distances_.end()) {
+		return (it->second);
+	}
+	else {
+		return (ComputeDistance(stop_from.coordinates, stop_to.coordinates));
+	}	
+}

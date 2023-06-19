@@ -106,7 +106,8 @@ Query InputReader::ParseQuery(std::string_view s) {
 			q.type = QueryType::AddStop;
 			q.stop.name = std::string( TrimWhitespaceSurrounding(opt->first) );
 			q.stop.coordinates = ParseStopCoordinates(opt->second);
-			opt = Split(opt->second, ','); // remove coordinate part
+			// remove coordinate part and check if there is distance part
+			opt = Split(opt->second, ',');
 			if (opt = Split(opt->second, ',');	!opt->second.empty()) {
 				q.stop_distancies = ParseStopDistances(opt->second);
 			}			

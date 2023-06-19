@@ -337,11 +337,47 @@ void TestGetBusesForStop() {
 
 }
 
+void TransportCatalogueStopsDistanciesFuncTest() {
+	using namespace std::literals;
+
+	std::vector<Stop> stops = {
+		{ "Marushkino"s, {55.595884, 37.209755} },
+		{ "Tolstopaltsevo"s, {55.611087, 37.208290} },
+		{ "Rasskazovka"s, {55.632761, 37.333324} },
+		{ "Biryulyovo Zapadnoye"s, {55.574371, 37.651700} },
+		{ "Universam"s, {55.587655, 37.645687} },
+		{ "Biryulyovo Tovarnaya"s, {55.592028, 37.653656} },
+		{ "Biryulyovo Passazhirskaya"s, {55.580999, 37.659164} }
+	};
+
+
+
+	TransportCatalogue transport_catalogue;
+	for (const Stop& stop : stops) {
+		transport_catalogue.AddStop(stop);
+	}
+	transport_catalogue.AddDistanceBetweenStops("Marushkino"s, "Tolstopaltsevo"s, 2000);
+	transport_catalogue.AddDistanceBetweenStops("Rasskazovka"s, "Biryulyovo Zapadnoye"s, 23000);
+	transport_catalogue.AddDistanceBetweenStops("Biryulyovo Passazhirskaya"s, "Biryulyovo Tovarnaya"s, 23000);
+	transport_catalogue.AddDistanceBetweenStops("Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, 21000);
+
+	assert(transport_catalogue.GetDistanceBetweenStops("Marushkino"s, "Tolstopaltsevo"s) == 2000);
+	assert(transport_catalogue.GetDistanceBetweenStops("Tolstopaltsevo"s, "Marushkino"s) == 2000);
+	assert(transport_catalogue.GetDistanceBetweenStops("Biryulyovo Passazhirskaya"s, "Biryulyovo Tovarnaya"s) == 23000);
+	assert(transport_catalogue.GetDistanceBetweenStops("Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s) == 21000);
+	auto opt_distance = transport_catalogue.GetDistanceBetweenStops("Tolstopaltsevo"s, "Rasskazovka"s);
+	assert(std::round(opt_distance.value()) == 8212);
+	std::cout << "TransportCatalogueStopsDistanciesFuncTest is OK"s << std::endl;
+
+}
+
+
 
 
 void TransportCatalogueRunTests() {
 	//TransportCatalogueMethodsForStopTest();
 	TransportCatalogueAddBusTest();
 	TestGetBusesForStop();
+	TransportCatalogueStopsDistanciesFuncTest();
 
 }
