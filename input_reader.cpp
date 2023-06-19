@@ -2,6 +2,7 @@
 // код сохраните в свой git-репозиторий
 #include "input_reader.h"
 #include <string_view>
+#include <assert.h>
 
 
 // remove spaces before and after string
@@ -36,6 +37,26 @@ std::optional<std::pair<std::string_view, std::string_view>> InputReader::Split(
 	}
 }
 
+std::pair<std::string, int> InputReader::ParseDistance(std::string_view s) {
+	if ( auto opt = Split(s, 'm'); opt.has_value() ) {
+		int distance = std::stoi(std::string(TrimWhitespaceSurrounding(opt->first)));
+		opt->second.remove_prefix( opt->second.find_first_of('t') + "to "s.size() );
+		std::string stop_name ( TrimWhitespaceSurrounding(opt->second) );
+		return { stop_name , distance };
+	}
+	return {};
+}
+
+
+std::vector<std::pair<std::string, int>> InputReader::ParseStopDistances(std::string_view s) {
+	std::vector<std::pair<std::string, int>> result;
+	for (auto opt = Split(s, ','); opt.has_value(); opt = Split(opt->second, ',')) {
+		result.push_back(ParseDistance(opt->first));
+	}
+	return result;
+}
+
+
 
 std::vector<std::string> InputReader::ParseRoute(std::string_view s) {
 	std::vector<std::string> route;
@@ -61,7 +82,8 @@ std::vector<std::string> InputReader::ParseRoute(std::string_view s) {
 Coordinates InputReader::ParseStopCoordinates(std::string_view s) {
 	auto opt_coordinates = Split(s, ',');
 	double lat = std::stod( std::string( TrimWhitespaceSurrounding(opt_coordinates->first) ) );
-	double lng = std::stod( std::string( TrimWhitespaceSurrounding(opt_coordinates->second) ) );
+	opt_coordinates = Split(opt_coordinates->second, ',');
+	double lng = std::stod( std::string( TrimWhitespaceSurrounding(opt_coordinates->first) ) );
 	return { lat,lng };
 }
 
@@ -84,6 +106,10 @@ Query InputReader::ParseQuery(std::string_view s) {
 			q.type = QueryType::AddStop;
 			q.stop.name = std::string( TrimWhitespaceSurrounding(opt->first) );
 			q.stop.coordinates = ParseStopCoordinates(opt->second);
+			opt = Split(opt->second, ','); // remove coordinate part
+			if (opt = Split(opt->second, ',');	!opt->second.empty()) {
+				q.stop_distancies = ParseStopDistances(opt->second);
+			}			
 			return q;
 		}
 		else {

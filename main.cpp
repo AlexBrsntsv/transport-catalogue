@@ -14,12 +14,11 @@ int ReadNumber(std::istream& is) {
 }
 
 int main() {
-	//InputReaderRunTests();
-	//TransportCatalogueRunTests();
+	InputReaderRunTests();
+	cout << "OK"s << endl;
 	
-
-	//TransportCatalogueRunTests();
-	//InputReaderRunTests();	
+	
+	/*
 	TransportCatalogue transport_catalogue;
 	InputQueryQueue input_queue;
 	static InputReader input_reader;
@@ -46,6 +45,6 @@ int main() {
 		std::cout << ShowInfo(transport_catalogue, input_queue.Info().front()) << std::endl;
 		input_queue.Info().pop();
 	}
-	
+	*/
 	return 0;
 }

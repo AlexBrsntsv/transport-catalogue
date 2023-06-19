@@ -20,13 +20,14 @@ struct Query {
 	std::string bus_name_info;
 	BusNew bus_new;
 	Stop stop;
+	std::vector<std::pair<std::string, int>> stop_distancies;
 };
 
 
 
 class InputReader {
 public:
-	Query GetQuery(std::istream& is);
+	Query GetQuery(std::istream& is);		
 
 private:
 	inline static const std::string COMMANDS_STOP = "Stop"s;
@@ -37,6 +38,8 @@ private:
 	static std::vector<std::string> ParseRoute(std::string_view s);
 	static Coordinates ParseStopCoordinates(std::string_view s);
 	static Query ParseQuery(std::string_view s);
+	static std::pair<std::string, int> ParseDistance(std::string_view s);
+	static std::vector<std::pair<std::string, int>> ParseStopDistances(std::string_view s);
 };
 
 
@@ -57,3 +60,4 @@ void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, const Query& 
 void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, const Query& q);
 
 
+//test
