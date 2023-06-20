@@ -51,13 +51,7 @@ void PrintBus(const Bus& bus);
 struct PairHasher {	
 	size_t operator()(const std::pair<const Stop*, const Stop*>& p) const {
 		size_t prime_number = 37;
-		return reinterpret_cast<size_t>(p.first) + reinterpret_cast<size_t>(p.second) * prime_number;
-	}
-};
-
-struct StopPtrHasher {
-	size_t operator()(const Stop* stop_ptr) const {			
-		return std::hash<long long>{}( reinterpret_cast<long long>(stop_ptr) );
+		return std::hash<const void*>{}(p.first) + std::hash<const void*>{}(p.second) * prime_number;
 	}
 };
 
@@ -69,9 +63,6 @@ public:
 
 	void  AddStopsLength(std::string name_from, std::string name_to, double length);
 	double GetStopsLength(const Stop& stop_from, const Stop& stop_to) const;
-	//std::optional<double> GetDistanceBetweenStops(std::string name_from, std::string name_to) const;
-	//double GetStopsDistance(const Stop& stop_from, const Stop& stop_to) const;
-
 	void AddStop(const Stop& stop);
 	const Stop& FindStop(std::string stop_name) const;
 	bool AddBus(const std::string& bus_name, const std::vector<std::string>& stops_list );
@@ -84,9 +75,6 @@ public:
 	double CalculateRouteLengthViaCoordinates(const Bus& bus) const;
 	double CalculateRouteLengthViaLengths(const Bus& bus) const;
 
-	//double ComputeStopsDistanceViaCoordinates(const Stop& stop_from, const Stop& stop_to) const;
-	//double ComputeStopsDistanceViaLengths(const Stop& stop_from, const Stop& stop_to) const;
-
 private:
 
 	int GetUniqueStopsNum(const Bus& bus) const;
@@ -95,7 +83,7 @@ private:
 	std::deque<Bus> buses_;																				// структура данных, содержащая данные об автобусахы
 	std::unordered_map<std::string_view, const Bus*, std::hash<std::string_view>> busname_to_bus_;		// хеш таблица для быстрого поиска по структуре buses_
 	std::unordered_map<std::pair<const Stop*, const Stop*>, double, PairHasher> stop_to_stop_distances_;
-	std::unordered_map<const Stop*, std::vector<const Bus*>, StopPtrHasher> stop_to_buses_;
+	std::unordered_map<const Stop*, std::vector<const Bus*>, std::hash<const void*>> stop_to_buses_;
 };
 
 

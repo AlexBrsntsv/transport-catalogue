@@ -168,8 +168,8 @@ double TransportCatalogue::CalculateRouteLengthViaLengths(const Bus& bus) const 
 		bus.route.end(),
 		bus.route.begin(),
 		distances.begin(),
-		[this](const auto lhs, const auto rhs) {
-			return this->GetStopsLength(*lhs, *rhs);
+		[this](const auto ptr_stop_to, const auto ptr_stop_from) {
+			return this->GetStopsLength(*ptr_stop_from, *ptr_stop_to);
 		}
 	);
 	double distance = std::reduce(
@@ -182,51 +182,8 @@ double TransportCatalogue::CalculateRouteLengthViaLengths(const Bus& bus) const 
 }
 
 
-double TransportCatalogue::GetStopsLength(const Stop& stop_from, const Stop& stop_to) const {
-	//return stop_to_stop_distances_.at({ &stop_from, &stop_to });	
-	return stop_to_stop_distances_.at({ &stop_from, &stop_to });
-
-	
+double TransportCatalogue::GetStopsLength(const Stop& stop_from, const Stop& stop_to) const {		
+	return stop_to_stop_distances_.at({ &stop_from, &stop_to });	
 }
 
 
-
-
-
-
-
-/*
-std::optional<double> TransportCatalogue::GetDistanceBetweenStops(std::string name_from, std::string name_to) const {
-	const Stop& stop_from = FindStop(name_from);
-	if (!StopIsValid(stop_from)) return std::nullopt;
-
-	const Stop& stop_to = FindStop(name_to);
-	if (!StopIsValid(stop_to)) return  std::nullopt;
-	
-	if (const auto it = stop_to_stop_distances_.find({ &stop_from, &stop_to }); it != stop_to_stop_distances_.end()) {
-		return (it->second);
-	}
-	else {
-		return (ComputeDistance(stop_from.coordinates, stop_to.coordinates));
-	}	
-}
-
-double TransportCatalogue::GetStopsDistance(const Stop& stop_from, const Stop& stop_to) const {
-	if (const auto it = stop_to_stop_distances_.find({ &stop_from, &stop_to }); it != stop_to_stop_distances_.end()) {
-		return (it->second);
-	}
-	else {
-		return (ComputeDistance(stop_from.coordinates, stop_to.coordinates));
-	}
-}
-*/
-
-//double TransportCatalogue::ComputeStopsDistanceViaCoordinates(const Stop& stop_from, const Stop& stop_to) const {
-//	return (ComputeDistance(stop_from.coordinates, stop_to.coordinates));
-//}
-//
-//double TransportCatalogue::ComputeStopsDistanceViaLengths(const Stop& stop_from, const Stop& stop_to) const {
-//	return stop_to_stop_distances_.at({ &stop_from, &stop_to });
-//
-//
-//}
