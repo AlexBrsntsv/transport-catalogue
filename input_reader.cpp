@@ -5,6 +5,19 @@
 #include <assert.h>
 
 
+namespace transport {
+
+namespace input {
+
+bool operator==(const Query& lhs, const Query& rhs) {
+	return
+		lhs.bus_name_info == rhs.bus_name_info &&
+		lhs.bus_new.name == rhs.bus_new.name &&
+		lhs.bus_new.route == rhs.bus_new.route &&
+		lhs.stop == rhs.stop &&
+		lhs.type == rhs.type;
+}
+
 // remove spaces before and after string
 std::string TrimWhitespaceSurrounding(const std::string& s) {
 	const char whitespace[]{ " \t\n" };
@@ -13,7 +26,6 @@ std::string TrimWhitespaceSurrounding(const std::string& s) {
 	const size_t last(s.find_last_not_of(whitespace));
 	return s.substr(first, (last - first + 1));
 }
-
 
 // remove spaces before and after string
 std::string_view InputReader::TrimWhitespaceSurrounding(std::string_view s) {
@@ -26,7 +38,7 @@ std::string_view InputReader::TrimWhitespaceSurrounding(std::string_view s) {
 
 std::optional<std::pair<std::string_view, std::string_view>> InputReader::Split(std::string_view line, char by) {
 	if (line.empty()) return std::nullopt;
-	size_t pos = line.find(by);	
+	size_t pos = line.find(by);
 	std::string_view left = line.substr(0, pos);
 
 	if (pos < line.size() && pos + 1 < line.size()) {
@@ -38,10 +50,10 @@ std::optional<std::pair<std::string_view, std::string_view>> InputReader::Split(
 }
 
 std::pair<std::string, int> InputReader::ParseDistance(std::string_view s) {
-	if ( auto opt = Split(s, 'm'); opt.has_value() ) {
+	if (auto opt = Split(s, 'm'); opt.has_value()) {
 		int distance = std::stoi(std::string(TrimWhitespaceSurrounding(opt->first)));
-		opt->second.remove_prefix( opt->second.find_first_of('t') + "to "s.size() );
-		std::string stop_name ( TrimWhitespaceSurrounding(opt->second) );
+		opt->second.remove_prefix(opt->second.find_first_of('t') + "to "s.size());
+		std::string stop_name(TrimWhitespaceSurrounding(opt->second));
 		return { stop_name , distance };
 	}
 	return {};
@@ -66,24 +78,24 @@ std::vector<std::string> InputReader::ParseRoute(std::string_view s) {
 	}
 	else {
 		return route;
-	}	
-		
+	}
+
 	for (auto opt = Split(s, split_symbol); opt.has_value(); opt = Split(opt->second, split_symbol)) {
 		route.push_back(std::string(TrimWhitespaceSurrounding(opt->first)));
-	}		
-	
+	}
+
 	if (split_symbol == '-') {
-		route.resize( 2 * route.size() - 1);		
-		std::copy(route.begin(), std::prev(route.end()), route.rbegin() );
+		route.resize(2 * route.size() - 1);
+		std::copy(route.begin(), std::prev(route.end()), route.rbegin());
 	}
 	return route;
 }
 
 Coordinates InputReader::ParseStopCoordinates(std::string_view s) {
 	auto opt_coordinates = Split(s, ',');
-	double lat = std::stod( std::string( TrimWhitespaceSurrounding(opt_coordinates->first) ) );
+	double lat = std::stod(std::string(TrimWhitespaceSurrounding(opt_coordinates->first)));
 	opt_coordinates = Split(opt_coordinates->second, ',');
-	double lng = std::stod( std::string( TrimWhitespaceSurrounding(opt_coordinates->first) ) );
+	double lng = std::stod(std::string(TrimWhitespaceSurrounding(opt_coordinates->first)));
 	return { lat,lng };
 }
 
@@ -96,21 +108,21 @@ Query InputReader::ParseQuery(std::string_view s) {
 		if (opt->first.substr(0, COMMANDS_BUS.size()) == COMMANDS_BUS) {
 			q.type = QueryType::AddBus;
 			opt->first.remove_prefix(COMMANDS_BUS.size());
-			q.bus_new.name = std::string( TrimWhitespaceSurrounding(opt->first) );
+			q.bus_new.name = std::string(TrimWhitespaceSurrounding(opt->first));
 			auto route = ParseRoute(opt->second);
 			q.bus_new.route.swap(route);
 			return q;
 		}
-		else if (opt->first.substr( 0, COMMANDS_STOP.size() ) == COMMANDS_STOP) {
-			opt->first.remove_prefix( COMMANDS_STOP.size() );
+		else if (opt->first.substr(0, COMMANDS_STOP.size()) == COMMANDS_STOP) {
+			opt->first.remove_prefix(COMMANDS_STOP.size());
 			q.type = QueryType::AddStop;
-			q.stop.name = std::string( TrimWhitespaceSurrounding(opt->first) );
+			q.stop.name = std::string(TrimWhitespaceSurrounding(opt->first));
 			q.stop.coordinates = ParseStopCoordinates(opt->second);
 			// remove coordinate part and check if there is distance part
 			opt = Split(opt->second, ',');
 			if (opt = Split(opt->second, ',');	!opt->second.empty()) {
 				q.stop_distancies = ParseStopDistances(opt->second);
-			}			
+			}
 			return q;
 		}
 		else {
@@ -122,10 +134,10 @@ Query InputReader::ParseQuery(std::string_view s) {
 		if (s.substr(0, COMMANDS_BUS.size()) == COMMANDS_BUS) {
 			q.type = QueryType::BusInfo;
 			s.remove_prefix(COMMANDS_BUS.size());
-			q.bus_name_info = std::string( TrimWhitespaceSurrounding(s) );
+			q.bus_name_info = std::string(TrimWhitespaceSurrounding(s));
 			return q;
 		}
-		else if( s.substr(0, COMMANDS_STOP.size()) == COMMANDS_STOP){
+		else if (s.substr(0, COMMANDS_STOP.size()) == COMMANDS_STOP) {
 			q.type = QueryType::StopInfo;
 			s.remove_prefix(COMMANDS_STOP.size());
 			q.stop_name_info = std::string(TrimWhitespaceSurrounding(s));
@@ -144,20 +156,22 @@ Query InputReader::GetQuery(std::istream& is) {
 	return ParseQuery(s);
 }
 
-void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, const Query& q) {
+void ProccessAddStopQuery(transport::catalogue::TransportCatalogue& transport_catalogue, const Query& q) {
 	transport_catalogue.AddStop(q.stop);
 }
 
-void ProccessAddStopsLengthsQuery(TransportCatalogue& transport_catalogue, const Query& q) {
+void ProccessAddStopsLengthsQuery(transport::catalogue::TransportCatalogue& transport_catalogue, const Query& q) {
 	for (const auto& [to_stop, distance] : q.stop_distancies) {
 		transport_catalogue.AddStopsLength(q.stop.name, to_stop, distance);
 	}
 }
 
-
-void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, const Query& q) {
-	transport_catalogue.AddBus( q.bus_new );
+void ProccessAddBusQuery(transport::catalogue::TransportCatalogue& transport_catalogue, const Query& q) {
+	transport_catalogue.AddBus(q.bus_new);
 }
+
+
+namespace query_queue {
 
 void InputQueryQueue::AddQuery(const Query& q) {
 	switch (q.type) {
@@ -170,8 +184,8 @@ void InputQueryQueue::AddQuery(const Query& q) {
 			AddStopQueryQueue.push(q);
 		}
 		else {
-			AddStopQueryQueue.push({ QueryType::AddStop, {},{},{},q.stop,{} });			
-			AddStopsLengthsQueryQueue.push(q);			
+			AddStopQueryQueue.push({ QueryType::AddStop, {},{},{},q.stop,{} });
+			AddStopsLengthsQueryQueue.push(q);
 		}
 		break;
 
@@ -180,14 +194,18 @@ void InputQueryQueue::AddQuery(const Query& q) {
 		GetInfoQueryQueue.push(q);
 		break;
 
-	case QueryType::Invalid:		
+	case QueryType::Invalid:
 		break;
 	}
 }
-	
+
 std::queue<Query>& InputQueryQueue::Busies() { return AddBusQueryQueue; }
 std::queue<Query>& InputQueryQueue::Stops() { return AddStopQueryQueue; }
 std::queue<Query>& InputQueryQueue::Info() { return GetInfoQueryQueue; }
 std::queue<Query>& InputQueryQueue::Lengths() { return AddStopsLengthsQueryQueue; }
 
+} // end of namespace query_queue
 
+} // end of namespace input
+
+} // end of namespace transport

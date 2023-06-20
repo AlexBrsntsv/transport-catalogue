@@ -3,8 +3,12 @@
 #include <sstream>
 #include <queue>
 
+
 using namespace std::literals;
 
+namespace transport {
+
+namespace input {
 
 enum class QueryType {
 	Invalid,
@@ -18,16 +22,16 @@ struct Query {
 	QueryType type;
 	std::string stop_name_info;
 	std::string bus_name_info;
-	BusNew bus_new;
-	Stop stop;
+	transport::catalogue::BusNew bus_new;
+	transport::catalogue::Stop stop;
 	std::vector<std::pair<std::string, int>> stop_distancies;
 };
 
-
+bool operator==(const Query& lhs, const Query& rhs);
 
 class InputReader {
 public:
-	Query GetQuery(std::istream& is);		
+	Query GetQuery(std::istream& is);
 
 private:
 	inline static const std::string COMMANDS_STOP = "Stop"s;
@@ -42,11 +46,12 @@ private:
 	static std::vector<std::pair<std::string, int>> ParseStopDistances(std::string_view s);
 };
 
+namespace query_queue {
 
 class InputQueryQueue {
 public:
 	InputQueryQueue() = default;
-	void AddQuery(const Query& q);	
+	void AddQuery(const Query& q);
 	std::queue<Query>& Busies();
 	std::queue<Query>& Stops();
 	std::queue<Query>& Info();
@@ -58,8 +63,11 @@ private:
 	std::queue<Query> GetInfoQueryQueue;
 };
 
-void ProccessAddStopQuery(TransportCatalogue& transport_catalogue, const Query& q);
-void ProccessAddBusQuery(TransportCatalogue& transport_catalogue, const Query& q);
-void ProccessAddStopsLengthsQuery(TransportCatalogue& transport_catalogue, const Query& q);
+} // end of namespace query_queue
+void ProccessAddStopQuery(transport::catalogue::TransportCatalogue & transport_catalogue, const Query& q);
+void ProccessAddBusQuery(transport::catalogue::TransportCatalogue& transport_catalogue, const Query& q);
+void ProccessAddStopsLengthsQuery(transport::catalogue::TransportCatalogue& transport_catalogue, const Query& q);
 
-//test
+} // end of namespace input
+
+} // end of namespace transport

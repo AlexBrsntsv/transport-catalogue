@@ -2,5 +2,10 @@
 
 #include <sstream>
 
-void TransportCatalogueRunTests();
-void InputReaderRunTests();
+
+namespace transport {
+	namespace tests {
+		void Catalogue ();
+		void Input();
+	}
+}

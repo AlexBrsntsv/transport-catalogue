@@ -2,6 +2,7 @@
 #include "tests.h"
 #include "transport_catalogue.h"
 #include "input_reader.h"
+#include "stat_reader.h"
 #include <cassert>
 #include <algorithm>
 #include <sstream>
@@ -9,120 +10,23 @@
 
 
 using namespace std::literals;
+using namespace transport::catalogue;
+using namespace transport::input;
+using namespace transport::output;
 
+namespace transport {
 
+namespace tests {
 
 
 //===============================================================
 // input_reader tests
 
-//void ParseRouteTest() {
-//	{
-//		std::string route = " Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye "s;
-//		std::vector<std::string> ethalon = {
-//			"Biryulyovo Zapadnoye"s,
-//			"Biryusinka"s,
-//			"Universam"s,
-//			"Biryulyovo Tovarnaya"s,
-//			"Biryulyovo Passazhirskaya"s,
-//			"Biryulyovo Zapadnoye"s
-//		};
-//		auto result = ParseRoute(route);
-//		assert(ethalon == result);
-//	}
-//
-//	{
-//		std::string route = " Tolstopaltsevo - Marushkino - Rasskazovka "s;
-//		std::vector<std::string> ethalon = {
-//			"Tolstopaltsevo"s,
-//			"Marushkino"s,
-//			"Rasskazovka"s,
-//			"Marushkino"s,
-//			"Tolstopaltsevo"s
-//		};
-//		auto result = ParseRoute(route);
-//		assert(ethalon == result);
-//	}
-//}
 
-//void ParseStopCoordinatesTest() {
-//	{
-//		Coordinates ethalon{ 55.581065,  37.648390 };
-//		assert(ethalon == ParseStopCoordinates(" 55.581065,  37.648390 "s));
-//	}
-//}
-
-bool operator==(const Query& lhs, const Query& rhs) {
-	return
-		lhs.bus_name_info == rhs.bus_name_info &&
-		lhs.bus_new.name == rhs.bus_new.name &&
-		lhs.bus_new.route == rhs.bus_new.route &&
-		lhs.stop == rhs.stop &&
-		lhs.type == rhs.type;
-}
-// old style
-//void InputReaderInputOperatorTest() {
-//	
-//	std::istringstream iss(
-//		"Stop Tolstopaltsevo : 55.611087, 37.208290\n"
-//		"Stop Marushkino : 55.595884, 37.209755\n"s
-//		"Bus 256 : Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s
-//		"Bus 750: Tolstopaltsevo - Marushkino - Rasskazovka\n"s
-//		"Stop Rasskazovka : 55.632761, 37.333324\n"s
-//		"Stop   Biryulyovo Zapadnoye : 55.574371, 37.651700\n"s
-//		"Stop Biryusinka : 55.581065, 37.648390\n"s
-//		"Stop Universam : 55.587655, 37.645687\n"s
-//		"Stop Biryulyovo Tovarnaya : 55.592028, 37.653656\n"s
-//		"Stop Biryulyovo Passazhirskaya : 55.580999, 37.659164\n"s
-//		"Bus 256\n"s
-//		"Bus 750\n"s
-//		"Bus    751\n"s
-//		"SBus    751\n"s
-//		"Stap Biryulyovo Passazhirskaya : 55.580999, 37.659164\n"s
-//		"Stop Biryulyovo Passazhirskaya\n"s
-//		"Stop Universam"s
-//	);
-//
-//	
-//		
-//	std::vector<Query> queries_ethalon = {
-//		{ QueryType::AddStop, {}, {}, {}, {"Tolstopaltsevo"s,55.611087, 37.208290}},
-//		{ QueryType::AddStop, {}, {}, {}, {"Marushkino"s,55.595884, 37.209755} },
-//		{ QueryType::AddBus, {}, {}, BusNew{"256"s, {"Biryulyovo Zapadnoye"s, "Biryusinka"s, "Universam"s, "Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, "Biryulyovo Zapadnoye"s} },{} },
-//		{ QueryType::AddBus, {}, {}, BusNew{"750"s, {"Tolstopaltsevo"s, "Marushkino"s, "Rasskazovka"s, "Marushkino"s, "Tolstopaltsevo"s} }, {} },
-//		{ QueryType::AddStop, {}, {}, {}, {"Rasskazovka"s,55.632761, 37.333324} },
-//		{ QueryType::AddStop, {}, {}, {}, {"Biryulyovo Zapadnoye"s,55.574371, 37.651700} },
-//		{ QueryType::AddStop, {}, {}, {}, {"Biryusinka"s,55.581065, 37.648390} },
-//		{ QueryType::AddStop, {}, {}, {}, {"Universam"s,55.587655, 37.645687} },
-//		{ QueryType::AddStop, {}, {}, {}, {"Biryulyovo Tovarnaya"s,55.592028, 37.653656} },
-//		{ QueryType::AddStop, {}, {}, {}, {"Biryulyovo Passazhirskaya"s,55.580999, 37.659164} },
-//		{ QueryType::BusInfo, {}, "256"s, {}, {} },
-//		{ QueryType::BusInfo, {}, "750"s, {}, {} },
-//		{ QueryType::BusInfo, {}, "751"s, {}, {} },
-//		{ QueryType::Invalid, {}, {}, {}, {} },
-//		{ QueryType::Invalid, {}, {}, {}, {}},
-//		{ QueryType::StopInfo, "Biryulyovo Passazhirskaya"s, {}, {}, {} },
-//		{ QueryType::StopInfo, "Universam"s, {}, {}, {} }
-//	};
-//	
-//	
-//	std::vector<Query> result;
-//	{
-//		InputReader input_reader;
-//		for (size_t i = 0; i < 17; ++i) {
-//			result.push_back(input_reader.GetQuery(iss));
-//		}
-//	}
-//
-//	assert(queries_ethalon == result);
-//	std::cout << "InputReaderInputOperatorTest is OK"s << std::endl;
-//	
-//}
-
-void InputReaderInputOperatorTest() {
+void InputGetQuery() {
 
 	std::istringstream iss(
-		
+
 		"Stop Marushkino : 55.595884, 37.209755, 9900m to Rasskazovka, 100m to Marushkino\n"s
 		"Bus 256 : Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye\n"s
 		"Bus 750: Tolstopaltsevo - Marushkino - Marushkino - Rasskazovka\n"s
@@ -134,7 +38,7 @@ void InputReaderInputOperatorTest() {
 		"Stop Biryulyovo Passazhirskaya : 55.580999, 37.659164, 1200m to Biryulyovo Zapadnoye\n"s
 		"Bus 828 : Biryulyovo Zapadnoye > Universam > Rossoshanskaya ulitsa > Biryulyovo Zapadnoye\n"s
 		"Stop Rossoshanskaya ulitsa : 55.595579, 37.605757\n"s
-		"Stop Prazhskaya : 55.611678, 37.603831\n"s		
+		"Stop Prazhskaya : 55.611678, 37.603831\n"s
 		"Bus 256\n"s
 		"Bus 750\n"s
 		"Bus 751\n"s
@@ -144,16 +48,6 @@ void InputReaderInputOperatorTest() {
 		"Stap Biryulyovo Zapadnoye\n"s
 		"Bas 750: Tolstopaltsevo - Marushkino - Marushkino - Rasskazovka"s
 	);
-
-
-	//struct Query {
-	//	QueryType type;
-	//	std::string stop_name_info;
-	//	std::string bus_name_info;
-	//	BusNew bus_new;
-	//	Stop stop;
-	//	std::vector<std::pair<std::string, int>> stop_distancies;
-	//};
 
 
 	std::vector<Query> queries_ethalon = {
@@ -182,7 +76,7 @@ void InputReaderInputOperatorTest() {
 
 	std::vector<Query> result;
 	{
-		InputReader input_reader;
+		transport::input::InputReader input_reader;
 		for (size_t i = 0; i < queries_ethalon.size(); ++i) {
 			result.push_back(input_reader.GetQuery(iss));
 		}
@@ -193,16 +87,12 @@ void InputReaderInputOperatorTest() {
 
 }
 
-
-
-
-
-void InputReaderRunTests() {
+void Input() {
 	//InputReaderGetCmdTest();
 	//InputReaderInputOperatorTest();
 	//InputReaderParseBusNameTest();
 	//InputReaderParseBusRouteTest();
-	InputReaderInputOperatorTest();
+	InputGetQuery();
 
 }
 
@@ -243,7 +133,7 @@ void InputReaderRunTests() {
 //}
 
 
-void TransportCatalogueAddBusTest() {
+void CatalogueAddBus() {
 	using namespace std::literals;
 
 	std::vector<Stop> stops = {
@@ -262,7 +152,7 @@ void TransportCatalogueAddBusTest() {
 	};
 	// old style AddBus
 	{
-		TransportCatalogue transport_catalogue;
+		transport::catalogue::TransportCatalogue transport_catalogue;
 		for (const Stop& stop : stops) {
 			transport_catalogue.AddStop(stop);
 		}
@@ -278,7 +168,7 @@ void TransportCatalogueAddBusTest() {
 
 	// new style AddBus
 	{
-		TransportCatalogue transport_catalogue;
+		transport::catalogue::TransportCatalogue transport_catalogue;
 		for (const Stop& stop : stops) {
 			transport_catalogue.AddStop(stop);
 		}
@@ -296,7 +186,7 @@ void TransportCatalogueAddBusTest() {
 }
 
 
-void TestGetBusesForStop() {
+void CatalogueGetBusesForStop() {
 
 	using namespace std::literals;
 
@@ -315,9 +205,9 @@ void TestGetBusesForStop() {
 		{ "Biryulyovo Passazhirskaya"s, {55.580999, 37.659164} }
 	};
 
-	
-	
-	TransportCatalogue transport_catalogue;
+
+
+	transport::catalogue::TransportCatalogue transport_catalogue;
 	for (const Stop& stop : stops) {
 		transport_catalogue.AddStop(stop);
 	}
@@ -333,11 +223,11 @@ void TestGetBusesForStop() {
 		assert(ethalon == transport_catalogue.GetBusesForStop("Abzakovo"s).value());
 	}
 	std::cout << "TestGetBusesForStop is OK"s << std::endl;
-	
+
 
 }
 
-void TransportCatalogueStopsDistanciesFuncTest() {
+void CatalogueGetStopsLength() {
 	using namespace std::literals;
 
 	std::vector<Stop> stops = {
@@ -352,7 +242,7 @@ void TransportCatalogueStopsDistanciesFuncTest() {
 
 
 
-	TransportCatalogue transport_catalogue;
+	transport::catalogue::TransportCatalogue transport_catalogue;
 	for (const Stop& stop : stops) {
 		transport_catalogue.AddStop(stop);
 	}
@@ -365,19 +255,18 @@ void TransportCatalogueStopsDistanciesFuncTest() {
 	assert(transport_catalogue.GetStopsLength(transport_catalogue.FindStop("Tolstopaltsevo"s), transport_catalogue.FindStop("Marushkino"s)) == 2000);
 	assert(transport_catalogue.GetStopsLength(transport_catalogue.FindStop("Biryulyovo Passazhirskaya"s), transport_catalogue.FindStop("Biryulyovo Tovarnaya"s)) == 23000);
 	assert(transport_catalogue.GetStopsLength(transport_catalogue.FindStop("Biryulyovo Tovarnaya"s), transport_catalogue.FindStop("Biryulyovo Passazhirskaya"s)) == 21000);
-	//double distance = transport_catalogue.ComputeStopsDistanceViaCoordinates(transport_catalogue.FindStop("Tolstopaltsevo"s), transport_catalogue.FindStop("Rasskazovka"s));
-	//assert(std::round(distance) == 8212);
 	std::cout << "TransportCatalogueStopsDistanciesFuncTest is OK"s << std::endl;
 
 }
 
 
-
-
-void TransportCatalogueRunTests() {
-	//TransportCatalogueMethodsForStopTest();
-	TransportCatalogueAddBusTest();
-	TestGetBusesForStop();
-	TransportCatalogueStopsDistanciesFuncTest();
-
+void Catalogue() {
+	CatalogueGetStopsLength();
+	CatalogueGetBusesForStop();
+	CatalogueAddBus();
 }
+
+
+} // end of namespace tests
+
+} // end jf namespace transport

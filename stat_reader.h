@@ -6,6 +6,12 @@
 
 
 
-//std::string ShowBusInfo(const TransportCatalogue& transport_catalogue, const std::string& bus_name);
-//std::string ShowStopInfo(const TransportCatalogue& transport_catalogue, const std::string& stop_name);
-std::string ShowInfo(const TransportCatalogue& tc, const Query& q);
+namespace transport {
+
+namespace output {
+
+std::string ShowInfo(const transport::catalogue::TransportCatalogue& tc, const transport::input::Query& q);
+
+} // end of namespace transport
+
+} // end of namespace output

@@ -6,29 +6,19 @@
 
 using namespace std::literals;
 
-// old style
-//static std::string BusInfoMessage(const std::string& bus_name, const TransportCatalogue::BusInfo& bus_info){
-//	
-//	int stops_on_route;
-//	int	unique_stops;
-//	double	route_length;
-//	std::tie<int, int, double>(stops_on_route, unique_stops, route_length) = bus_info;
-//	route_length = std::round(route_length * 100) / 100;
-//	return 
-//		"Bus "s + bus_name + ": "s + 
-//		std::to_string(stops_on_route) + " stops on route, "s + 
-//		std::to_string(unique_stops) + " unique stops, " + 
-//		std::to_string(route_length) + " route length"s;
-//}
+namespace transport {
 
+namespace output {
 
-static std::string BusInfoMessage(const std::string& bus_name, const TransportCatalogue::BusInfo& bus_info) {
+namespace detailed {
+
+static std::string BusInfoMessage(const std::string& bus_name, const transport::catalogue::TransportCatalogue::BusInfo& bus_info) {
 
 	int stops_on_route;
 	int	unique_stops;
 	double	route_length;
 	double curvature;
-	std::tie<int, int, double>(stops_on_route, unique_stops, route_length, curvature) = bus_info;
+	std::tie<int, int, double, double>(stops_on_route, unique_stops, route_length, curvature) = bus_info;
 	route_length = std::round(route_length * 100) / 100;
 	return
 		"Bus "s + bus_name + ": "s +
@@ -44,7 +34,7 @@ static std::string BusInfoErrorMessage(const std::string& bus_name) {
 }
 
 
-std::string ShowBusInfo(const TransportCatalogue& transport_catalogue, const std::string& bus_name) {
+std::string ShowBusInfo(const transport::catalogue::TransportCatalogue& transport_catalogue, const std::string& bus_name) {
 	if (const auto opt_bus_info = transport_catalogue.GetBusInfo(bus_name); opt_bus_info.has_value()) {
 		return BusInfoMessage(bus_name, opt_bus_info.value());
 	}
@@ -71,7 +61,7 @@ std::string StopInfoMessage(const std::string& stop_name, std::vector<std::strin
 	return result;
 }
 
-std::string ShowStopInfo(const TransportCatalogue& transport_catalogue, const std::string& stop_name) {
+std::string ShowStopInfo(const transport::catalogue::TransportCatalogue& transport_catalogue, const std::string& stop_name) {
 	if (const auto opt_stop_info = transport_catalogue.GetBusesForStop(stop_name); opt_stop_info.has_value()) {
 		if (opt_stop_info.value().empty()) return StopInfoEmptyMessage(stop_name);
 		else return StopInfoMessage(stop_name, opt_stop_info.value());
@@ -82,14 +72,20 @@ std::string ShowStopInfo(const TransportCatalogue& transport_catalogue, const st
 }
 
 
-std::string ShowInfo(const TransportCatalogue& tc, const Query& q) {
-	if (q.type == QueryType::BusInfo) {
-		return ( ShowBusInfo(tc, q.bus_name_info) );
+} // end of namespace detailed
+
+std::string ShowInfo(const transport::catalogue::TransportCatalogue& tc, const  transport::input::Query& q) {
+	if (q.type == transport::input::QueryType::BusInfo) {
+		return (detailed::ShowBusInfo(tc, q.bus_name_info));
 	}
-	else if (q.type == QueryType::StopInfo) {
-		return (ShowStopInfo(tc, q.stop_name_info));
+	else if (q.type == transport::input::QueryType::StopInfo) {
+		return (detailed::ShowStopInfo(tc, q.stop_name_info));
 	}
 	else {
 		return "error"s;
 	}
 }
+
+} // end of namespace output
+
+} // end of namespace transport

@@ -6,6 +6,7 @@
 #include "transport_catalogue.h"
 #include "stat_reader.h"
 using namespace std;
+using namespace transport;
 
 int ReadNumber(std::istream& is) {		
 	std::string s;
@@ -14,10 +15,13 @@ int ReadNumber(std::istream& is) {
 }
 
 int main() {	
+	//transport::tests::Catalogue();
+	//transport::tests::Input();
 	
-	TransportCatalogue transport_catalogue;
-	InputQueryQueue input_queue;
-	static InputReader input_reader;
+	
+	transport::catalogue::TransportCatalogue transport_catalogue;
+	transport::input::query_queue::InputQueryQueue input_queue;
+	transport::input::InputReader input_reader;
 		
 	for (size_t i = ReadNumber(std::cin); i > 0; --i) {
 		input_queue.AddQuery( input_reader.GetQuery(std::cin) );
@@ -44,7 +48,7 @@ int main() {
 	}
 
 	while (!input_queue.Info().empty()) {
-		std::cout << ShowInfo(transport_catalogue, input_queue.Info().front()) << std::endl;
+		std::cout << transport::output::ShowInfo(transport_catalogue, input_queue.Info().front()) << std::endl;
 		input_queue.Info().pop();
 	}
 	
