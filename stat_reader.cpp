@@ -4,13 +4,17 @@
 #include "stat_reader.h"
 #include <math.h>
 
+
+
 using namespace std::literals;
 
 namespace transport {
 
-namespace output {
+namespace reader {
 
-namespace detailed {
+namespace statistics {
+
+namespace detail {
 
 static std::string BusInfoMessage(const std::string& bus_name, const transport::catalogue::TransportCatalogue::BusInfo& bus_info) {
 
@@ -72,20 +76,32 @@ std::string ShowStopInfo(const transport::catalogue::TransportCatalogue& transpo
 }
 
 
-} // end of namespace detailed
-
-std::string ShowInfo(const transport::catalogue::TransportCatalogue& tc, const  transport::input::Query& q) {
-	if (q.type == transport::input::QueryType::BusInfo) {
-		return (detailed::ShowBusInfo(tc, q.bus_name_info));
+std::string ShowInfo(const transport::catalogue::TransportCatalogue& tc, const  Query& q) {
+	if (q.type == QueryType::BusInfo) {
+		return (ShowBusInfo(tc, q.bus_name_info));
 	}
-	else if (q.type == transport::input::QueryType::StopInfo) {
-		return (detailed::ShowStopInfo(tc, q.stop_name_info));
+	else if (q.type == transport::reader::QueryType::StopInfo) {
+		return (ShowStopInfo(tc, q.stop_name_info));
 	}
 	else {
 		return "error"s;
 	}
 }
 
-} // end of namespace output
+} // end of namespace detailed
+
+
+
+void Show(std::istream& in, std::ostream& out, int query_num, const transport::catalogue::TransportCatalogue& tc) {
+	for (int i = 0; i < query_num; ++i) {			
+		out << detail::ShowInfo(tc, GetQuery(in));
+	}
+}
+
+} // end of namespace statistics
+
+
+} // end of namespace reader
 
 } // end of namespace transport
+

@@ -49,25 +49,10 @@ const Stop& TransportCatalogue::FindStop(std::string stop_name) const {
 	}
 }
 
-bool TransportCatalogue::AddBus(const std::string& bus_name, const std::vector<std::string>& stops_list) {
+bool TransportCatalogue::AddBus(const std::string& bus_name, const std::vector<std::string>& route) {
 	using namespace detailed;
 	Bus bus_to_add = { bus_name, {} };
-	for (const std::string& stop_name : stops_list) {
-		if (const Stop& curr_stop = FindStop(stop_name); StopIsValid(curr_stop)) {
-			bus_to_add.route.push_back(&curr_stop);
-		}
-		else return false;
-	}
-	buses_.push_back(bus_to_add);
-	busname_to_bus_[buses_.back().name] = &buses_.back();
-	return true;
-
-}
-
-bool TransportCatalogue::AddBus(const BusNew& bus) {
-	using namespace detailed;
-	Bus bus_to_add = { bus.name, {} };
-	for (const std::string& stop_name : bus.route) {
+	for (const std::string& stop_name : route) {
 		if (const Stop& curr_stop = FindStop(stop_name); StopIsValid(curr_stop)) {
 			bus_to_add.route.push_back(&curr_stop);
 		}
@@ -81,6 +66,7 @@ bool TransportCatalogue::AddBus(const BusNew& bus) {
 	}
 	return true;
 }
+
 
 const Bus& TransportCatalogue::FindBus(std::string bus_name) const {
 	using namespace detailed;

@@ -7,16 +7,19 @@
 
 namespace transport {
 
-namespace input {
+namespace reader {
 
 bool operator==(const Query& lhs, const Query& rhs) {
 	return
 		lhs.bus_name_info == rhs.bus_name_info &&
-		lhs.bus_new.name == rhs.bus_new.name &&
-		lhs.bus_new.route == rhs.bus_new.route &&
+		lhs.busname_to_route.first == rhs.busname_to_route.first &&
+		lhs.busname_to_route.second == rhs.busname_to_route.second &&
 		lhs.stop == rhs.stop &&
 		lhs.type == rhs.type;
 }
+
+namespace detail{
+
 
 // remove spaces before and after string
 std::string TrimWhitespaceSurrounding(const std::string& s) {
@@ -28,7 +31,7 @@ std::string TrimWhitespaceSurrounding(const std::string& s) {
 }
 
 // remove spaces before and after string
-std::string_view InputReader::TrimWhitespaceSurrounding(std::string_view s) {
+std::string_view TrimWhitespaceSurrounding(std::string_view s) {
 	const char whitespace[]{ " \t\n" };
 	const size_t first(s.find_first_not_of(whitespace));
 	if (std::string::npos == first) { return {}; }
@@ -36,7 +39,7 @@ std::string_view InputReader::TrimWhitespaceSurrounding(std::string_view s) {
 	return s.substr(first, (last - first + 1));
 }
 
-std::optional<std::pair<std::string_view, std::string_view>> InputReader::Split(std::string_view line, char by) {
+std::optional<std::pair<std::string_view, std::string_view>> Split(std::string_view line, char by) {
 	if (line.empty()) return std::nullopt;
 	size_t pos = line.find(by);
 	std::string_view left = line.substr(0, pos);
@@ -49,7 +52,7 @@ std::optional<std::pair<std::string_view, std::string_view>> InputReader::Split(
 	}
 }
 
-std::pair<std::string, int> InputReader::ParseDistance(std::string_view s) {
+std::pair<std::string, int> ParseDistance(std::string_view s) {
 	if (auto opt = Split(s, 'm'); opt.has_value()) {
 		int distance = std::stoi(std::string(TrimWhitespaceSurrounding(opt->first)));
 		opt->second.remove_prefix(opt->second.find_first_of('t') + "to "s.size());
@@ -60,7 +63,7 @@ std::pair<std::string, int> InputReader::ParseDistance(std::string_view s) {
 }
 
 
-std::vector<std::pair<std::string, int>> InputReader::ParseStopDistances(std::string_view s) {
+std::vector<std::pair<std::string, int>> ParseStopDistances(std::string_view s) {
 	std::vector<std::pair<std::string, int>> result;
 	for (auto opt = Split(s, ','); opt.has_value(); opt = Split(opt->second, ',')) {
 		result.push_back(ParseDistance(opt->first));
@@ -70,7 +73,7 @@ std::vector<std::pair<std::string, int>> InputReader::ParseStopDistances(std::st
 
 
 
-std::vector<std::string> InputReader::ParseRoute(std::string_view s) {
+std::vector<std::string> ParseRoute(std::string_view s) {
 	std::vector<std::string> route;
 	char split_symbol;
 	if (size_t devider_pos = s.find_first_of(">-"); devider_pos != s.npos) {
@@ -91,7 +94,7 @@ std::vector<std::string> InputReader::ParseRoute(std::string_view s) {
 	return route;
 }
 
-Coordinates InputReader::ParseStopCoordinates(std::string_view s) {
+Coordinates ParseStopCoordinates(std::string_view s) {
 	auto opt_coordinates = Split(s, ',');
 	double lat = std::stod(std::string(TrimWhitespaceSurrounding(opt_coordinates->first)));
 	opt_coordinates = Split(opt_coordinates->second, ',');
@@ -99,7 +102,7 @@ Coordinates InputReader::ParseStopCoordinates(std::string_view s) {
 	return { lat,lng };
 }
 
-Query InputReader::ParseQuery(std::string_view s) {
+Query ParseQuery(std::string_view s) {
 
 	s = TrimWhitespaceSurrounding(s); // remove spaces
 	Query q{};
@@ -108,9 +111,9 @@ Query InputReader::ParseQuery(std::string_view s) {
 		if (opt->first.substr(0, COMMANDS_BUS.size()) == COMMANDS_BUS) {
 			q.type = QueryType::AddBus;
 			opt->first.remove_prefix(COMMANDS_BUS.size());
-			q.bus_new.name = std::string(TrimWhitespaceSurrounding(opt->first));
+			q.busname_to_route.first = std::string(TrimWhitespaceSurrounding(opt->first));
 			auto route = ParseRoute(opt->second);
-			q.bus_new.route.swap(route);
+			q.busname_to_route.second.swap(route);
 			return q;
 		}
 		else if (opt->first.substr(0, COMMANDS_STOP.size()) == COMMANDS_STOP) {
@@ -150,28 +153,9 @@ Query InputReader::ParseQuery(std::string_view s) {
 	}
 }
 
-Query InputReader::GetQuery(std::istream& is) {
-	std::string s;
-	std::getline(is, s);
-	return ParseQuery(s);
-}
-
-void ProccessAddStopQuery(transport::catalogue::TransportCatalogue& transport_catalogue, const Query& q) {
-	transport_catalogue.AddStop(q.stop);
-}
-
-void ProccessAddStopsLengthsQuery(transport::catalogue::TransportCatalogue& transport_catalogue, const Query& q) {
-	for (const auto& [to_stop, distance] : q.stop_distancies) {
-		transport_catalogue.AddStopsLength(q.stop.name, to_stop, distance);
-	}
-}
-
-void ProccessAddBusQuery(transport::catalogue::TransportCatalogue& transport_catalogue, const Query& q) {
-	transport_catalogue.AddBus(q.bus_new);
-}
 
 
-namespace query_queue {
+
 
 void InputQueryQueue::AddQuery(const Query& q) {
 	switch (q.type) {
@@ -184,28 +168,63 @@ void InputQueryQueue::AddQuery(const Query& q) {
 			AddStopQueryQueue.push(q);
 		}
 		else {
-			AddStopQueryQueue.push({ QueryType::AddStop, {},{},{},q.stop,{} });
+			AddStopQueryQueue.push({ QueryType::AddStop, {}, {}, {}, q.stop, {} });
 			AddStopsLengthsQueryQueue.push(q);
 		}
 		break;
-
-	case QueryType::StopInfo:
 	case QueryType::BusInfo:
-		GetInfoQueryQueue.push(q);
-		break;
-
+	case QueryType::StopInfo:
 	case QueryType::Invalid:
+		throw std::invalid_argument("Invalid command"s);
 		break;
 	}
 }
 
 std::queue<Query>& InputQueryQueue::Busies() { return AddBusQueryQueue; }
 std::queue<Query>& InputQueryQueue::Stops() { return AddStopQueryQueue; }
-std::queue<Query>& InputQueryQueue::Info() { return GetInfoQueryQueue; }
 std::queue<Query>& InputQueryQueue::Lengths() { return AddStopsLengthsQueryQueue; }
 
-} // end of namespace query_queue
+} // end of namespace detail
+
+namespace input{
+
+void Proccess(std::istream& is, int query_num,  transport::catalogue::TransportCatalogue& transport_catalogue) {
+	detail::InputQueryQueue input_queue;
+	for (int i = 0; i < query_num; ++i) {
+		input_queue.AddQuery(reader::GetQuery(is));
+	}
+
+	while (!input_queue.Stops().empty()) {
+		auto& next_queue = input_queue.Stops().front();
+		transport_catalogue.AddStop(next_queue.stop);
+		input_queue.Stops().pop();
+	}
+
+	while (!input_queue.Lengths().empty()) {
+		auto& next_queue = input_queue.Lengths().front();
+		for (const auto& [to_stop, distance] : next_queue.stop_distancies) {
+			transport_catalogue.AddStopsLength(next_queue.stop.name, to_stop, distance);
+		}
+		input_queue.Lengths().pop();
+	}
+
+	while (!input_queue.Busies().empty()) {
+		auto& next_queue = input_queue.Busies().front();
+		transport_catalogue.AddBus(next_queue.busname_to_route.first, next_queue.busname_to_route.second);
+		input_queue.Busies().pop();
+	}
+}
 
 } // end of namespace input
+
+
+
+Query GetQuery(std::istream& is) {
+	std::string s;
+	std::getline(is, s);
+	return detail::ParseQuery(s);
+}
+
+} // end of namespace reader
 
 } // end of namespace transport

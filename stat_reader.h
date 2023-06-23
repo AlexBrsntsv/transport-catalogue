@@ -8,10 +8,15 @@
 
 namespace transport {
 
-namespace output {
+namespace reader {
 
-std::string ShowInfo(const transport::catalogue::TransportCatalogue& tc, const transport::input::Query& q);
+namespace statistics {
+
+void Show(std::istream& in, std::ostream& out, int query_num, const transport::catalogue::TransportCatalogue& tc);
+
+}
+
+} // end of namespace reader
 
 } // end of namespace transport
 
-} // end of namespace output

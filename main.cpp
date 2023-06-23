@@ -15,42 +15,14 @@ int ReadNumber(std::istream& is) {
 }
 
 int main() {	
-	//transport::tests::Catalogue();
-	//transport::tests::Input();
+	transport::tests::Catalogue();
+	transport::tests::Input();
 	
 	
 	transport::catalogue::TransportCatalogue transport_catalogue;
-	transport::input::query_queue::InputQueryQueue input_queue;
-	transport::input::InputReader input_reader;
-		
-	for (size_t i = ReadNumber(std::cin); i > 0; --i) {
-		input_queue.AddQuery( input_reader.GetQuery(std::cin) );
-	}
-	
-	while (!input_queue.Stops().empty()) {
-		ProccessAddStopQuery(transport_catalogue, input_queue.Stops().front() );
-		input_queue.Stops().pop();
-	}
 
-	while (!input_queue.Lengths().empty()) {
-		ProccessAddStopsLengthsQuery(transport_catalogue, input_queue.Lengths().front());
-		input_queue.Lengths().pop();
-	}
-
-	while (!input_queue.Busies().empty()) {
-		ProccessAddBusQuery(transport_catalogue, input_queue.Busies().front());
-		input_queue.Busies().pop();
-	}
-	
-
-	for (size_t i = ReadNumber(std::cin); i > 0; --i) {
-		input_queue.AddQuery(input_reader.GetQuery(std::cin));
-	}
-
-	while (!input_queue.Info().empty()) {
-		std::cout << transport::output::ShowInfo(transport_catalogue, input_queue.Info().front()) << std::endl;
-		input_queue.Info().pop();
-	}
+	transport::reader::input::Proccess(std::cin, ReadNumber(std::cin), transport_catalogue);	
+	transport::reader::statistics::Show(std::cin, std::cout, ReadNumber(std::cin), transport_catalogue);
 	
 	return 0;
 }

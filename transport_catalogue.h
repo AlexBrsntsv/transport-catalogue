@@ -37,11 +37,6 @@ struct Bus {
 	}
 };
 
-struct BusNew {
-	std::string name;
-	std::vector<std::string> route;
-};
-
 namespace detailed {
 
 struct PairHasher {
@@ -64,8 +59,7 @@ public:
 
 	void AddStop(const Stop& stop);
 	const Stop& FindStop(std::string stop_name) const;
-	bool AddBus(const std::string& bus_name, const std::vector<std::string>& stops_list);
-	bool AddBus(const BusNew& bus);
+	bool AddBus(const std::string& bus_name, const std::vector<std::string>& route);	
 	const Bus& FindBus(std::string bus_name) const;
 	std::optional<BusInfo> GetBusInfo(std::string bus_name) const;
 	std::optional<std::vector<std::string_view>> GetBusesForStop(const std::string& stop_name) const;

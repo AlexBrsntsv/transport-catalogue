@@ -11,8 +11,8 @@
 
 using namespace std::literals;
 using namespace transport::catalogue;
-using namespace transport::input;
-using namespace transport::output;
+using namespace transport::reader;
+
 
 namespace transport {
 
@@ -52,15 +52,15 @@ void InputGetQuery() {
 
 	std::vector<Query> queries_ethalon = {
 		{ QueryType::AddStop, {}, {}, {}, {"Marushkino"s,55.595884, 37.209755}, { {"Rasskazovka"s, 9900},  {"Marushkino"s, 100} } },
-		{ QueryType::AddBus, {}, {}, BusNew{"256"s, {"Biryulyovo Zapadnoye"s, "Biryusinka"s, "Universam"s, "Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, "Biryulyovo Zapadnoye"s} },{}, {} },
-		{ QueryType::AddBus, {}, {}, BusNew{"750"s, {"Tolstopaltsevo"s, "Marushkino"s, "Marushkino"s, "Rasskazovka"s, "Marushkino"s, "Marushkino"s, "Tolstopaltsevo"s} }, {}, {} },
+		{ QueryType::AddBus, {}, {}, {"256"s, {"Biryulyovo Zapadnoye"s, "Biryusinka"s, "Universam"s, "Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, "Biryulyovo Zapadnoye"s} },{}, {} },
+		{ QueryType::AddBus, {}, {}, {"750"s, {"Tolstopaltsevo"s, "Marushkino"s, "Marushkino"s, "Rasskazovka"s, "Marushkino"s, "Marushkino"s, "Tolstopaltsevo"s} }, {}, {} },
 		{ QueryType::AddStop, {}, {}, {}, {"Rasskazovka"s,55.632761, 37.333324}, { {"Marushkino"s, 9500} } },
 		{ QueryType::AddStop, {}, {}, {}, {"Biryulyovo Zapadnoye"s,55.574371, 37.651700},  { {"Rossoshanskaya ulitsa"s, 7500},  {"Biryusinka"s, 1800}, {"Universam"s, 2400} } },
 		{ QueryType::AddStop, {}, {}, {}, {"Biryusinka"s,55.581065, 37.648390},  { {"Universam"s, 750} } },
 		{ QueryType::AddStop, {}, {}, {}, {"Universam"s,55.587655, 37.645687}, { {"Rossoshanskaya ulitsa"s, 5600},  {"Biryulyovo Tovarnaya"s, 900} } },
 		{ QueryType::AddStop, {}, {}, {}, {"Biryulyovo Tovarnaya"s,55.592028, 37.653656},  { {"Biryulyovo Passazhirskaya"s, 1300} } },
 		{ QueryType::AddStop, {}, {}, {}, {"Biryulyovo Passazhirskaya"s,55.580999, 37.659164}, { {"Biryulyovo Zapadnoye"s, 1200} } },
-		{ QueryType::AddBus, {}, {}, BusNew{"828"s, {"Biryulyovo Zapadnoye"s, "Universam"s, "Rossoshanskaya ulitsa"s, "Biryulyovo Zapadnoye"s} },{}, {} },
+		{ QueryType::AddBus, {}, {}, {"828"s, {"Biryulyovo Zapadnoye"s, "Universam"s, "Rossoshanskaya ulitsa"s, "Biryulyovo Zapadnoye"s} },{}, {} },
 		{ QueryType::AddStop, {}, {}, {}, {"Rossoshanskaya ulitsa"s, 55.595579, 37.605757}, {} },
 		{ QueryType::AddStop, {}, {}, {}, {"Prazhskaya"s, 55.611678, 37.603831}, {} },
 		{ QueryType::BusInfo, {}, "256"s, {}, {}, {} },
@@ -76,9 +76,9 @@ void InputGetQuery() {
 
 	std::vector<Query> result;
 	{
-		transport::input::InputReader input_reader;
+	
 		for (size_t i = 0; i < queries_ethalon.size(); ++i) {
-			result.push_back(input_reader.GetQuery(iss));
+			result.push_back(transport::reader::GetQuery(iss));
 		}
 	}
 
@@ -173,12 +173,12 @@ void CatalogueAddBus() {
 			transport_catalogue.AddStop(stop);
 		}
 		// success operations
-		assert(transport_catalogue.AddBus(BusNew{ "811"s, { "Abzakovo"s, "Rasskazovka"s, "Marushkino"s, "Staleleteinaya"s, "Novokuznetsovo"s } }));
-		assert(transport_catalogue.AddBus(BusNew{ "100"s, { "Biryulyovo Zapadnoye"s, "Marushkino"s, "Universam"s, "Biryulyovo Passazhirskaya"s } }));
+		assert(transport_catalogue.AddBus( "811"s, { "Abzakovo"s, "Rasskazovka"s, "Marushkino"s, "Staleleteinaya"s, "Novokuznetsovo"s } ));
+		assert(transport_catalogue.AddBus( "100"s, { "Biryulyovo Zapadnoye"s, "Marushkino"s, "Universam"s, "Biryulyovo Passazhirskaya"s } ));
 
 		// none success operations
-		assert(!transport_catalogue.AddBus(BusNew{ "999"s, { "unexistable stop"s, "church"s, "Universam"s, "Biryulyovo Passazhirskaya"s } }));
-		assert(!transport_catalogue.AddBus(BusNew{ "111"s, { "Abzakovo"s, "Rasskazovka"s, "Marushkino"s, "another unexistable stop"s, ""s, ""s, "Biryulyovo Passazhirskaya"s } }));
+		assert(!transport_catalogue.AddBus( "999"s, { "unexistable stop"s, "church"s, "Universam"s, "Biryulyovo Passazhirskaya"s } ));
+		assert(!transport_catalogue.AddBus( "111"s, { "Abzakovo"s, "Rasskazovka"s, "Marushkino"s, "another unexistable stop"s, ""s, ""s, "Biryulyovo Passazhirskaya"s } ));
 	}
 
 	std::cout << "TransportCatalogueAddBusTest is OK"s << std::endl;
@@ -212,11 +212,13 @@ void CatalogueGetBusesForStop() {
 		transport_catalogue.AddStop(stop);
 	}
 	// success operations
-	transport_catalogue.AddBus(BusNew{ "811"s, { "Abzakovo"s, "Rasskazovka"s, "Marushkino"s, "Staleleteinaya"s, "Novokuznetsovo"s } });
-	transport_catalogue.AddBus(BusNew{ "100"s, { "Biryulyovo Zapadnoye"s, "Marushkino"s, "Universam"s, "Biryulyovo Passazhirskaya"s } });
+	transport_catalogue.AddBus( "811"s, { "Abzakovo"s, "Rasskazovka"s, "Marushkino"s, "Staleleteinaya"s, "Novokuznetsovo"s } );
+	transport_catalogue.AddBus( "100"s, { "Biryulyovo Zapadnoye"s, "Marushkino"s, "Universam"s, "Biryulyovo Passazhirskaya"s  });
 	{
 		std::vector<std::string_view> ethalon = { "100"sv, "811"sv };
-		assert(ethalon == transport_catalogue.GetBusesForStop("Marushkino"s).value());
+		auto buses = transport_catalogue.GetBusesForStop("Marushkino"s);
+		assert(buses.has_value());
+		assert(ethalon == buses.value());
 	}
 	{
 		std::vector<std::string_view> ethalon = { "811"sv };
@@ -270,3 +272,4 @@ void Catalogue() {
 } // end of namespace tests
 
 } // end jf namespace transport
+
