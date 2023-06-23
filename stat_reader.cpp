@@ -92,14 +92,13 @@ std::string ShowInfo(const transport::catalogue::TransportCatalogue& tc, const  
 
 
 
-void Show(std::istream& in, std::ostream& out, int query_num, const transport::catalogue::TransportCatalogue& tc) {
+void Proccess(std::istream& in, std::ostream& out, int query_num, const transport::catalogue::TransportCatalogue& tc) {
 	for (int i = 0; i < query_num; ++i) {			
-		out << detail::ShowInfo(tc, GetQuery(in));
+		out << detail::ShowInfo(tc, GetQuery(in)) << std::endl;;
 	}
 }
 
 } // end of namespace statistics
-
 
 } // end of namespace reader
 

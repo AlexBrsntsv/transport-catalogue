@@ -8,6 +8,8 @@
 #include <tuple>
 #include <functional>
 #include <optional>
+#include <algorithm>
+#include <numeric>
 
 namespace transport {
 
@@ -62,14 +64,12 @@ public:
 	bool AddBus(const std::string& bus_name, const std::vector<std::string>& route);	
 	const Bus& FindBus(std::string bus_name) const;
 	std::optional<BusInfo> GetBusInfo(std::string bus_name) const;
-	std::optional<std::vector<std::string_view>> GetBusesForStop(const std::string& stop_name) const;
-
-
-	double CalculateRouteLengthViaCoordinates(const Bus& bus) const;
-	double CalculateRouteLengthViaLengths(const Bus& bus) const;
-
+	std::optional<std::vector<std::string_view>> GetBusesForStop(const std::string& stop_name) const;	
 
 private:
+
+	template<typename Predicate>
+	double CalculateRouteLength(const Bus& bus, Predicate predicate) const;
 
 	static int GetUniqueStopsNum(const Bus& bus);
 	std::deque<Stop> stops_;																			// структура данных содержащая остановки
@@ -79,6 +79,27 @@ private:
 	std::unordered_map<std::pair<const Stop*, const Stop*>, double, detailed::PairHasher> stop_to_stop_distances_;
 	std::unordered_map<const Stop*, std::vector<const Bus*>, std::hash<const void*>> stop_to_buses_;
 };
+
+
+template<typename Predicate>
+double TransportCatalogue::CalculateRouteLength(const Bus& bus, Predicate predicate) const {
+
+	std::vector<double> distances(bus.route.size() - 1);
+	std::transform(
+		std::next(bus.route.begin()),
+		bus.route.end(),
+		bus.route.begin(),
+		distances.begin(),
+		predicate
+	);
+	double distance = std::reduce(
+		distances.begin(),
+		distances.end(),
+		0.0,
+		std::plus<>()
+	);
+	return distance;
+}
 
 } // end of namespace cataloque
 

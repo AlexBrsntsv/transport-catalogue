@@ -15,14 +15,14 @@ int ReadNumber(std::istream& is) {
 }
 
 int main() {	
-	transport::tests::Catalogue();
-	transport::tests::Input();
+	//transport::tests::Catalogue();
+	//transport::tests::Input();
 	
 	
 	transport::catalogue::TransportCatalogue transport_catalogue;
 
 	transport::reader::input::Proccess(std::cin, ReadNumber(std::cin), transport_catalogue);	
-	transport::reader::statistics::Show(std::cin, std::cout, ReadNumber(std::cin), transport_catalogue);
+	transport::reader::statistics::Proccess(std::cin, std::cout, ReadNumber(std::cin), transport_catalogue);
 	
 	return 0;
 }

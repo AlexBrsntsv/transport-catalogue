@@ -1,10 +1,7 @@
 
 #include "transport_catalogue.h"
-#include <algorithm>
-#include <iostream>
-#include <numeric>
 #include "geo.h"
-#include <functional>
+
 
 
 using namespace std::literals;
@@ -12,7 +9,6 @@ using namespace std::literals;
 namespace transport {
 
 namespace catalogue {
-
 
 namespace detailed {
 
@@ -91,9 +87,21 @@ std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::s
 	using namespace detailed;
 	const Bus& bus = FindBus(bus_name);
 	if (!BusIsValid(bus)) return std::nullopt;
-	//ComputeRouteLength
-	double factitial_length = CalculateRouteLengthViaLengths(bus);
-	double geographical_length = CalculateRouteLengthViaCoordinates(bus);
+
+
+	double factitial_length = CalculateRouteLength(
+		bus, 
+		[this](const Stop* from, const Stop* to){
+			return this->GetStopsLength(*from, *to);
+		}
+	);
+
+	double geographical_length = CalculateRouteLength(
+		bus,
+		[this](const Stop* from, const Stop* to) {
+			return ComputeDistance(from->coordinates, to->coordinates);
+		}
+	);
 
 	return BusInfo{ static_cast<int>(bus.route.size()), GetUniqueStopsNum(bus), factitial_length, factitial_length / geographical_length };
 }
@@ -133,48 +141,6 @@ void TransportCatalogue::AddStopsLength(std::string name_from, std::string name_
 	if (const auto it = stop_to_stop_distances_.find({ &stop_to, &stop_from }); it == stop_to_stop_distances_.end()) {
 		stop_to_stop_distances_[{ &stop_to, & stop_from }] = length;
 	}
-}
-
-
-
-double TransportCatalogue::CalculateRouteLengthViaCoordinates(const Bus& bus) const {
-	std::vector<double> distances(bus.route.size() - 1);
-	std::transform(
-		std::next(bus.route.begin()),
-		bus.route.end(),
-		bus.route.begin(),
-		distances.begin(),
-		[](const auto lhs, const auto rhs) {
-			return ComputeDistance(lhs->coordinates, rhs->coordinates);
-		}
-	);
-	double distance = std::reduce(
-		distances.begin(),
-		distances.end(),
-		0.0,
-		std::plus<>()
-	);
-	return distance;
-}
-
-double TransportCatalogue::CalculateRouteLengthViaLengths(const Bus& bus) const {
-	std::vector<double> distances(bus.route.size() - 1);
-	std::transform(
-		std::next(bus.route.begin()),
-		bus.route.end(),
-		bus.route.begin(),
-		distances.begin(),
-		[this](const auto ptr_stop_to, const auto ptr_stop_from) {
-			return this->GetStopsLength(*ptr_stop_from, *ptr_stop_to);
-		}
-	);
-	double distance = std::reduce(
-		distances.begin(),
-		distances.end(),
-		0.0,
-		std::plus<>()
-	);
-	return distance;
 }
 
 
