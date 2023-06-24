@@ -153,10 +153,6 @@ Query ParseQuery(std::string_view s) {
 	}
 }
 
-
-
-
-
 void InputQueryQueue::AddQuery(const Query& q) {
 	switch (q.type) {
 	case QueryType::AddBus:
@@ -172,8 +168,9 @@ void InputQueryQueue::AddQuery(const Query& q) {
 			AddStopsLengthsQueryQueue.push(q);
 		}
 		break;
+
 	case QueryType::BusInfo:
-	case QueryType::StopInfo:
+	case QueryType::StopInfo:	
 	case QueryType::Invalid:
 		throw std::invalid_argument("Invalid command"s);
 		break;
@@ -203,7 +200,7 @@ void Proccess(std::istream& is, int query_num,  transport::catalogue::TransportC
 	while (!input_queue.Lengths().empty()) {
 		auto& next_queue = input_queue.Lengths().front();
 		for (const auto& [to_stop, distance] : next_queue.stop_distancies) {
-			transport_catalogue.AddStopsLength(next_queue.stop.name, to_stop, distance);
+			transport_catalogue.SetStopsLength(next_queue.stop.name, to_stop, distance);
 		}
 		input_queue.Lengths().pop();
 	}

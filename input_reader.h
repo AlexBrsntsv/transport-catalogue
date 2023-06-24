@@ -51,12 +51,11 @@ public:
 	void AddQuery(const Query& q);
 	std::queue<Query>& Busies();
 	std::queue<Query>& Stops();
-	std::queue<Query>& Lengths();
+	std::queue<Query>& Lengths();	
 private:
 	std::queue<Query> AddStopsLengthsQueryQueue;
 	std::queue<Query> AddStopQueryQueue;
 	std::queue<Query> AddBusQueryQueue;
-
 };
 
 } // end of namespace detail

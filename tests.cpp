@@ -248,10 +248,10 @@ void CatalogueGetStopsLength() {
 	for (const Stop& stop : stops) {
 		transport_catalogue.AddStop(stop);
 	}
-	transport_catalogue.AddStopsLength("Marushkino"s, "Tolstopaltsevo"s, 2000);
-	transport_catalogue.AddStopsLength("Rasskazovka"s, "Biryulyovo Zapadnoye"s, 23000);
-	transport_catalogue.AddStopsLength("Biryulyovo Passazhirskaya"s, "Biryulyovo Tovarnaya"s, 23000);
-	transport_catalogue.AddStopsLength("Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, 21000);
+	transport_catalogue.SetStopsLength("Marushkino"s, "Tolstopaltsevo"s, 2000);
+	transport_catalogue.SetStopsLength("Rasskazovka"s, "Biryulyovo Zapadnoye"s, 23000);
+	transport_catalogue.SetStopsLength("Biryulyovo Passazhirskaya"s, "Biryulyovo Tovarnaya"s, 23000);
+	transport_catalogue.SetStopsLength("Biryulyovo Tovarnaya"s, "Biryulyovo Passazhirskaya"s, 21000);
 
 	assert(transport_catalogue.GetStopsLength(transport_catalogue.FindStop("Marushkino"s), transport_catalogue.FindStop("Tolstopaltsevo"s)) == 2000);
 	assert(transport_catalogue.GetStopsLength(transport_catalogue.FindStop("Tolstopaltsevo"s), transport_catalogue.FindStop("Marushkino"s)) == 2000);

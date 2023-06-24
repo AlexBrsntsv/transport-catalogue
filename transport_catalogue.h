@@ -55,7 +55,7 @@ class TransportCatalogue {
 public:
 	using BusInfo = std::tuple<int, int, double, double>;
 
-	void  AddStopsLength(std::string name_from, std::string name_to, double length);
+	void  SetStopsLength(std::string name_from, std::string name_to, double length);
 	double GetStopsLength(const Stop& stop_from, const Stop& stop_to) const;
 	double GetStopsGeoLength(const Stop& stop_from, const Stop& stop_to) const;
 
@@ -69,7 +69,7 @@ public:
 private:
 
 	template<typename Predicate>
-	double CalculateRouteLength(const Bus& bus, Predicate predicate) const;
+	double ComputeRouteLength(const Bus& bus, Predicate predicate) const;
 
 	static int GetUniqueStopsNum(const Bus& bus);
 	std::deque<Stop> stops_;																			// структура данных содержащая остановки
@@ -82,13 +82,13 @@ private:
 
 
 template<typename Predicate>
-double TransportCatalogue::CalculateRouteLength(const Bus& bus, Predicate predicate) const {
+double TransportCatalogue::ComputeRouteLength(const Bus& bus, Predicate predicate) const {
 
 	std::vector<double> distances(bus.route.size() - 1);
 	std::transform(
-		std::next(bus.route.begin()),
-		bus.route.end(),
 		bus.route.begin(),
+		std::prev(bus.route.end()),
+		std::next(bus.route.begin()),
 		distances.begin(),
 		predicate
 	);

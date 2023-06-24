@@ -12,7 +12,7 @@ namespace reader {
 
 namespace statistics {
 
-void Proccess(std::istream& in, std::ostream& out, int query_num, const transport::catalogue::TransportCatalogue& tc);
+void Proccess(std::istream& in,  int query_num, const transport::catalogue::TransportCatalogue& tc, std::ostream& out);
 
 }
 

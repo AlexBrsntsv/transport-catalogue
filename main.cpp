@@ -21,8 +21,8 @@ int main() {
 	
 	transport::catalogue::TransportCatalogue transport_catalogue;
 
-	transport::reader::input::Proccess(std::cin, ReadNumber(std::cin), transport_catalogue);	
-	transport::reader::statistics::Proccess(std::cin, std::cout, ReadNumber(std::cin), transport_catalogue);
+	transport::reader::input::Proccess(std::cin, ReadNumber(std::cin), transport_catalogue);		
+	transport::reader::statistics::Proccess(std::cin, ReadNumber(std::cin), transport_catalogue, std::cout );
 	
 	return 0;
 }

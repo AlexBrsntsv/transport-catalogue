@@ -88,24 +88,27 @@ std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::s
 	const Bus& bus = FindBus(bus_name);
 	if (!BusIsValid(bus)) return std::nullopt;
 
-
-	double factitial_length = CalculateRouteLength(
+	double factitial_length = ComputeRouteLength(
 		bus, 
 		[this](const Stop* from, const Stop* to){
 			return this->GetStopsLength(*from, *to);
 		}
 	);
 
-	double geographical_length = CalculateRouteLength(
+	double geographical_length = ComputeRouteLength(
 		bus,
 		[this](const Stop* from, const Stop* to) {
-			return ComputeDistance(from->coordinates, to->coordinates);
+			return GetStopsGeoLength(*from, *to);
 		}
 	);
 
-	return BusInfo{ static_cast<int>(bus.route.size()), GetUniqueStopsNum(bus), factitial_length, factitial_length / geographical_length };
+	return BusInfo{ 
+		static_cast<int>(bus.route.size()), 
+		GetUniqueStopsNum(bus), 
+		factitial_length, 
+		factitial_length / geographical_length 
+	};
 }
-
 
 std::optional<std::vector<std::string_view>> TransportCatalogue::GetBusesForStop(const std::string& stop_name) const {
 	using namespace detailed;
@@ -128,7 +131,7 @@ std::optional<std::vector<std::string_view>> TransportCatalogue::GetBusesForStop
 	return result;
 }
 
-void TransportCatalogue::AddStopsLength(std::string name_from, std::string name_to, double length) {
+void TransportCatalogue::SetStopsLength(std::string name_from, std::string name_to, double length) {
 	using namespace detailed;
 	const Stop& stop_from = FindStop(name_from);
 	if (!StopIsValid(stop_from)) return;
@@ -136,10 +139,10 @@ void TransportCatalogue::AddStopsLength(std::string name_from, std::string name_
 	const Stop& stop_to = FindStop(name_to);
 	if (!StopIsValid(stop_to)) return;
 
-	stop_to_stop_distances_[{ &stop_from, & stop_to }] = length;
+	stop_to_stop_distances_[{ &stop_from, &stop_to }] = length;
 
 	if (const auto it = stop_to_stop_distances_.find({ &stop_to, &stop_from }); it == stop_to_stop_distances_.end()) {
-		stop_to_stop_distances_[{ &stop_to, & stop_from }] = length;
+		stop_to_stop_distances_[{ &stop_to, &stop_from }] = length;
 	}
 }
 

@@ -88,13 +88,18 @@ std::string ShowInfo(const transport::catalogue::TransportCatalogue& tc, const  
 	}
 }
 
-} // end of namespace detailed
+} // end of namespace detail
 
 
 
-void Proccess(std::istream& in, std::ostream& out, int query_num, const transport::catalogue::TransportCatalogue& tc) {
-	for (int i = 0; i < query_num; ++i) {			
-		out << detail::ShowInfo(tc, GetQuery(in)) << std::endl;;
+void Proccess(std::istream& in, int query_num, const transport::catalogue::TransportCatalogue& tc, std::ostream& out) {
+	std::queue<Query> statistic_query_queue;
+	for (int i = 0; i < query_num; ++i) {	
+		statistic_query_queue.push( GetQuery(in) );
+	}
+	while (!statistic_query_queue.empty()) {		
+		out << detail::ShowInfo(tc, statistic_query_queue.front()) << std::endl;
+		statistic_query_queue.pop();
 	}
 }
 
