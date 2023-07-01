@@ -29,11 +29,18 @@ struct PairHasher {
 
 } // end of namespace detailed
 
+struct BusInfo {
+	int stops_on_route;
+	int unique_stops;
+	double route_length;
+	double curvature;
+};
+
 
 class TransportCatalogue {
 
 public:
-	using BusInfo = std::tuple<int, int, double, double>;
+	//using BusInfo = std::tuple<int, int, double, double>;
 
 	void  SetStopsLength(std::string name_from, std::string name_to, double length);
 	double GetStopsLength(const domain::Stop& stop_from, const domain::Stop& stop_to) const;
@@ -43,6 +50,7 @@ public:
 	const domain::Stop& FindStop(std::string stop_name) const;
 	bool AddBus(const std::string& bus_name, const std::vector<std::string>& route);	
 	const domain::Bus& FindBus(std::string bus_name) const;
+
 	std::optional<BusInfo> GetBusInfo(std::string bus_name) const;
 	std::optional<std::vector<std::string_view>> GetBusesForStop(const std::string& stop_name) const;	
 

@@ -82,7 +82,7 @@ int TransportCatalogue::GetUniqueStopsNum(const Bus& bus) {
 }
 
 
-std::optional<TransportCatalogue::BusInfo> TransportCatalogue::GetBusInfo(std::string bus_name) const {
+std::optional<BusInfo> TransportCatalogue::GetBusInfo(std::string bus_name) const {
 	using namespace detailed;
 	const Bus& bus = FindBus(bus_name);
 	if (!BusIsValid(bus)) return std::nullopt;
