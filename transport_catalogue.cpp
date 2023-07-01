@@ -1,10 +1,9 @@
 
 #include "transport_catalogue.h"
-#include "geo.h"
-
 
 
 using namespace std::literals;
+using namespace domain;
 
 namespace transport {
 
@@ -12,8 +11,8 @@ namespace catalogue {
 
 namespace detailed {
 
-static const Stop invalid_stop = { ""s, {} };	// unexisted stop
-static const Bus invalid_bus = { ""s, {} };		// unexisted bus
+
+
 
 
 static bool StopIsValid(const Stop& stop) {
@@ -28,7 +27,7 @@ static bool BusIsValid(const Bus& bus) {
 
 
 
-void TransportCatalogue::AddStop(const Stop& stop) {
+void TransportCatalogue::AddStop(Stop stop) {
 	stops_.push_back(stop);
 	stopname_to_stop_[std::string_view(stops_.back().name)] = &stops_.back();
 }

@@ -94,7 +94,7 @@ std::vector<std::string> ParseRoute(std::string_view s) {
 	return route;
 }
 
-Coordinates ParseStopCoordinates(std::string_view s) {
+geo::Coordinates ParseStopCoordinates(std::string_view s) {
 	auto opt_coordinates = Split(s, ',');
 	double lat = std::stod(std::string(TrimWhitespaceSurrounding(opt_coordinates->first)));
 	opt_coordinates = Split(opt_coordinates->second, ',');
