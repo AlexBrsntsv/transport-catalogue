@@ -24,7 +24,7 @@ namespace tests {
 //===============================================================
 // input_reader tests
 
-
+/*
 void InputGetQuery() {
 
 	std::istringstream iss(
@@ -88,13 +88,14 @@ void InputGetQuery() {
 	std::cout << "InputReaderInputOperatorTest is OK"s << std::endl;
 
 }
+*/
 
 void Input() {
 	//InputReaderGetCmdTest();
 	//InputReaderInputOperatorTest();
 	//InputReaderParseBusNameTest();
 	//InputReaderParseBusRouteTest();
-	InputGetQuery();
+	//InputGetQuery();
 
 }
 

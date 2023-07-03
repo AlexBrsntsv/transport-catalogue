@@ -3,8 +3,12 @@
 #include <sstream>
 #include <iomanip>
 #include "input_reader.h"
+#include "json_reader.h"
+
 #include "transport_catalogue.h"
 #include "stat_reader.h"
+#include <sstream>
+#include "json.h"
 using namespace std;
 using namespace transport;
 
@@ -19,10 +23,56 @@ int main() {
 	//transport::tests::Input();
 	
 	
-	transport::catalogue::TransportCatalogue transport_catalogue;
+	//transport::catalogue::TransportCatalogue transport_catalogue;
+	//transport::reader::TextReader text_reader(std::cin);
+	//transport::reader::Process(&text_reader, ReadNumber(std::cin), transport_catalogue, std::cout); // заполнение
+	//transport::reader::Process(&text_reader, ReadNumber(std::cin), transport_catalogue, std::cout); // чтение
+        
+    std::setlocale(LC_ALL, "Rus");
+    std::setlocale(LC_NUMERIC, "en_US.UTF-8"); // чтобы std::stod  работала корректно
 
-	transport::reader::input::Proccess(std::cin, ReadNumber(std::cin), transport_catalogue);		
-	transport::reader::statistics::Proccess(std::cin, ReadNumber(std::cin), transport_catalogue, std::cout );
-	
+    std::istringstream ss(
+        " {"s
+        "          \"base_requests\": ["s
+        "{"s
+        "  \"type\": \"Bus\","s
+        "  \"name\" : \"114\","s
+        " \"stops\" : [\"Морской вокзал\", \"Ривьерский мост\"] ,"s
+        "  \"is_roundtrip\" : false"s
+        " },"s
+        " {"s
+        "\"type\": \"Stop\","s
+        "\"name\" : \"Ривьерский мост\","s
+        " \"latitude\" : 43.587795,"s
+        " \"longitude\" : 39.716901,"s
+        "\"road_distances\" : {\"Морской вокзал\": 850}"
+        "},"s
+        "{"s
+        " \"type\": \"Stop\","s
+        "\"name\" : \"Морской вокзал\","
+        "\"latitude\" : 43.581969,"
+        "\"longitude\" : 39.719848,"
+        "\"road_distances\" : {\"Ривьерский мост\": 850}"s
+        "}"s
+        "],"s
+        "\"stat_requests\": ["s
+        " { \"id\": 1, \"type\" : \"Stop\", \"name\" : \"Ривьерский мост\" },"s
+        " { \"id\": 2, \"type\" : \"Bus\", \"name\" : \"114\" }"s
+        "]"s
+        "}"s
+    );
+
+    transport::catalogue::TransportCatalogue transport_catalogue;
+    transport::reader::JsonReader json_reader(ss);
+    transport::reader::Process(&json_reader, -1, transport_catalogue, std::cout); // заполнение-чтение
+   
+
+
+
+
+
+
+
+
 	return 0;
 }

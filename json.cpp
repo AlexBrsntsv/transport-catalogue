@@ -57,7 +57,7 @@ int LoadExp(istream& input) {
 */
 Node LoadNumber(istream& input) {
     std::string s;
-    s.reserve(10);
+    s.reserve(15);
     bool double_number_mark = false;
     bool mark = false;
     char next_char = input.peek();
@@ -74,8 +74,8 @@ Node LoadNumber(istream& input) {
         next_char = input.peek();
     }
     try {
-        if (double_number_mark) return std::stod(s);
-        else return std::stoi(s);
+        if (double_number_mark) return std::stod(s);        
+        else return std::stoi(s);        
     }
     catch (...) {
         throw json::ParsingError("Incorrect json document");

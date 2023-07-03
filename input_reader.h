@@ -11,15 +11,20 @@ namespace transport {
 
 namespace reader {
 
-enum class QueryType {
-	Invalid,
+enum class QueryType {	
 	AddBus,
 	AddStop,
+	Distancies,
 	BusInfo,
-	StopInfo
+	StopInfo,
+	QueryTypesAmount,
+	Invalid
 };
 
+size_t GetPriority(QueryType q);
+
 struct Query {
+	int id = -1;
 	QueryType type;
 	std::string stop_name_info;
 	std::string bus_name_info;
@@ -30,42 +35,102 @@ struct Query {
 
 bool operator==(const Query& lhs, const Query& rhs);
 
-
-Query GetQuery(std::istream& is);
-
-namespace detail {
-
-inline static const std::string COMMANDS_STOP = "Stop"s;
-inline static const std::string COMMANDS_BUS = "Bus"s;
-
-std::string_view TrimWhitespaceSurrounding(std::string_view s);
-std::optional<std::pair<std::string_view, std::string_view>> Split(std::string_view line, char by);
-std::vector<std::string> ParseRoute(std::string_view s);
-geo::Coordinates ParseStopCoordinates(std::string_view s);
-Query ParseQuery(std::string_view s);
-std::pair<std::string, int> ParseDistance(std::string_view s);
-std::vector<std::pair<std::string, int>> ParseStopDistances(std::string_view s);
-
-class InputQueryQueue {
+template<typename Value>
+class InputPriorityQueue {
 public:
-	InputQueryQueue() = default;
-	void AddQuery(const Query& q);
-	std::queue<Query>& Busies();
-	std::queue<Query>& Stops();
-	std::queue<Query>& Lengths();	
+	explicit InputPriorityQueue(size_t priority_lvl_num): priority_level_number_ (priority_lvl_num) { 
+		queues_.resize(priority_lvl_num); 
+	}
+	InputPriorityQueue() = delete;
+	void Add(const Value& value, size_t priority_lvl) {
+		if (priority_lvl >= priority_level_number_) {
+			throw std::invalid_argument("unexistable priority level");
+		}		
+		queues_[priority_lvl].push(value);
+	}
+	void Add(Value&& value, size_t priority_lvl) {
+		if (priority_lvl >= priority_level_number_) {
+			throw std::invalid_argument("unexistable priority level");
+		}
+		queues_[priority_lvl].push( move(value) );
+	}	
+
+	Value GetNext() {
+		Value result;
+		for (auto& q : queues_) {
+			if (!q.empty()) {
+				result = q.front();
+				q.pop();
+				break;
+			}
+		}
+		return result;
+	}
+
+	bool Empty() const {		
+		for (const auto& q : queues_) {
+			if (!q.empty()) return false;
+		}	
+		return true;
+	}
 private:
-	std::queue<Query> AddStopsLengthsQueryQueue;
-	std::queue<Query> AddStopQueryQueue;
-	std::queue<Query> AddBusQueryQueue;
+	size_t priority_level_number_;
+	std::vector<std::queue<Value>> queues_;
 };
 
-} // end of namespace detail
 
-namespace input {
+class InputReader {
+public:
+	InputReader(std::istream& input): input_(input){ }	
+	virtual void Process(size_t query_num = 1) = 0;
+	virtual ~InputReader() = default;
 
-	void Proccess(std::istream& is, int query_num, transport::catalogue::TransportCatalogue& transport_catalogue);
+	void ProcessQuery(Query&& q){
+		if ((q.type == QueryType::AddStop) && !q.stop_distancies.empty()) {
+			Query extra_q;
+			extra_q.type = QueryType::Distancies;
+			extra_q.stop = q.stop;
+			extra_q.stop_distancies.swap(q.stop_distancies);
+			queue_.Add(extra_q, GetPriority(extra_q.type));
+		}
+		queue_.Add(q, GetPriority(q.type));
+	}
 
-}
+	Query GetNext() {
+		return (queue_.GetNext());
+	}
+	bool Empty() {
+		return (queue_.Empty());
+	}
+
+private:
+	//virtual Query ExtractQuery(std::istream& input_) = 0; // extracts query from source stream
+	InputPriorityQueue<Query> queue_{ static_cast<size_t>( QueryType::QueryTypesAmount ) };
+
+protected:
+	std::istream& input_;
+};
+
+
+class TextReader final : public InputReader {
+public:
+	TextReader(std::istream& in) : InputReader(in) {}
+	void Process(size_t query_num) override {
+		for (size_t n = 0; n < query_num; ++n) {
+			ProcessQuery(ExtractQuery(input_));
+		}
+	}
+private:
+	Query ExtractQuery(std::istream& input_);
+};
+
+
+void Process(
+	InputReader* reader,
+	int query_num,
+	transport::catalogue::TransportCatalogue& db,
+	std::ostream& out);
+
 
 
 } // end of namespace reader

@@ -14,7 +14,7 @@ namespace reader {
 
 namespace statistics {
 
-namespace detail {
+namespace {
 
 static std::string BusInfoMessage(const std::string& bus_name, const transport::catalogue::BusInfo& bus_info) {
 		
@@ -70,6 +70,7 @@ std::string ShowStopInfo(const transport::catalogue::TransportCatalogue& transpo
 	}
 }
 
+} // end of anonymous namespace
 
 std::string ShowInfo(const transport::catalogue::TransportCatalogue& tc, const  Query& q) {
 	if (q.type == QueryType::BusInfo) {
@@ -83,20 +84,6 @@ std::string ShowInfo(const transport::catalogue::TransportCatalogue& tc, const  
 	}
 }
 
-} // end of namespace detail
-
-
-
-void Proccess(std::istream& in, int query_num, const transport::catalogue::TransportCatalogue& tc, std::ostream& out) {
-	std::queue<Query> statistic_query_queue;
-	for (int i = 0; i < query_num; ++i) {	
-		statistic_query_queue.push( GetQuery(in) );
-	}
-	while (!statistic_query_queue.empty()) {		
-		out << detail::ShowInfo(tc, statistic_query_queue.front()) << std::endl;
-		statistic_query_queue.pop();
-	}
-}
 
 } // end of namespace statistics
 

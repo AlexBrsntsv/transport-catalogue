@@ -3,22 +3,15 @@
 #include "input_reader.h"
 #include <string_view>
 #include <assert.h>
+#include "stat_reader.h"
 
+namespace { // file scope functions
 
-namespace transport {
+using transport::reader::Query;
+using transport::reader::QueryType;
 
-namespace reader {
-
-bool operator==(const Query& lhs, const Query& rhs) {
-	return
-		lhs.bus_name_info == rhs.bus_name_info &&
-		lhs.busname_to_route.first == rhs.busname_to_route.first &&
-		lhs.busname_to_route.second == rhs.busname_to_route.second &&
-		lhs.stop == rhs.stop &&
-		lhs.type == rhs.type;
-}
-
-namespace detail{
+inline static const std::string COMMANDS_STOP = "Stop"s;
+inline static const std::string COMMANDS_BUS = "Bus"s;
 
 
 // remove spaces before and after string
@@ -70,8 +63,6 @@ std::vector<std::pair<std::string, int>> ParseStopDistances(std::string_view s) 
 	}
 	return result;
 }
-
-
 
 std::vector<std::string> ParseRoute(std::string_view s) {
 	std::vector<std::string> route;
@@ -153,73 +144,91 @@ Query ParseQuery(std::string_view s) {
 	}
 }
 
-void InputQueryQueue::AddQuery(const Query& q) {
-	switch (q.type) {
-	case QueryType::AddBus:
-		AddBusQueryQueue.push(q);
-		break;
-
-	case QueryType::AddStop:
-		if (q.stop_distancies.empty()) {
-			AddStopQueryQueue.push(q);
-		}
-		else {
-			AddStopQueryQueue.push({ QueryType::AddStop, {}, {}, {}, q.stop, {} });
-			AddStopsLengthsQueryQueue.push(q);
-		}
-		break;
-
-	case QueryType::BusInfo:
-	case QueryType::StopInfo:	
-	case QueryType::Invalid:
-		throw std::invalid_argument("Invalid command"s);
-		break;
-	}
-}
-
-std::queue<Query>& InputQueryQueue::Busies() { return AddBusQueryQueue; }
-std::queue<Query>& InputQueryQueue::Stops() { return AddStopQueryQueue; }
-std::queue<Query>& InputQueryQueue::Lengths() { return AddStopsLengthsQueryQueue; }
-
-} // end of namespace detail
-
-namespace input{
-
-void Proccess(std::istream& is, int query_num,  transport::catalogue::TransportCatalogue& transport_catalogue) {
-	detail::InputQueryQueue input_queue;
-	for (int i = 0; i < query_num; ++i) {
-		input_queue.AddQuery(reader::GetQuery(is));
-	}
-
-	while (!input_queue.Stops().empty()) {
-		auto& next_queue = input_queue.Stops().front();
-		transport_catalogue.AddStop(next_queue.stop);
-		input_queue.Stops().pop();
-	}
-
-	while (!input_queue.Lengths().empty()) {
-		auto& next_queue = input_queue.Lengths().front();
-		for (const auto& [to_stop, distance] : next_queue.stop_distancies) {
-			transport_catalogue.SetStopsLength(next_queue.stop.name, to_stop, distance);
-		}
-		input_queue.Lengths().pop();
-	}
-
-	while (!input_queue.Busies().empty()) {
-		auto& next_queue = input_queue.Busies().front();
-		transport_catalogue.AddBus(next_queue.busname_to_route.first, next_queue.busname_to_route.second);
-		input_queue.Busies().pop();
-	}
-}
-
-} // end of namespace input
-
-
-
 Query GetQuery(std::istream& is) {
 	std::string s;
 	std::getline(is, s);
-	return detail::ParseQuery(s);
+	return ParseQuery(s);
+}
+
+} // end of anonymous namespace
+
+namespace transport{
+
+namespace reader {
+
+size_t GetPriority(QueryType q) {
+	size_t result = 0;
+	switch (q) {
+	case QueryType::AddStop:
+		result = 0; // highest priority
+		break;
+
+	case QueryType::Distancies:
+		result = 1;
+		break;
+	case QueryType::AddBus:
+		result = 2;
+		break;
+
+	case QueryType::BusInfo: // have same priority
+	case QueryType::StopInfo:
+		result = 3;
+		break;
+	default:
+		result = static_cast<size_t>(QueryType::QueryTypesAmount);
+		break;
+	}
+	return result;
+}
+
+Query TextReader::ExtractQuery(std::istream& input_) {
+	return GetQuery(input_);
+} // extracts query from source stream
+
+bool operator==(const Query& lhs, const Query& rhs) {
+	return
+		lhs.bus_name_info == rhs.bus_name_info &&
+		lhs.busname_to_route.first == rhs.busname_to_route.first &&
+		lhs.busname_to_route.second == rhs.busname_to_route.second &&
+		lhs.stop == rhs.stop &&
+		lhs.type == rhs.type;
+}
+
+namespace { // file scope function
+
+void QueryTypeHandler(Query&& q, transport::catalogue::TransportCatalogue& db, std::ostream& out) {
+	switch (q.type) {
+	case QueryType::AddStop:
+		db.AddStop(q.stop);
+		break;
+	case QueryType::AddBus:
+		db.AddBus(q.busname_to_route.first, q.busname_to_route.second);
+		break;
+	case QueryType::Distancies:
+		for (const auto& [to_stop, distance] : q.stop_distancies) {
+			db.SetStopsLength(q.stop.name, to_stop, distance);
+		}
+		break;
+	case QueryType::BusInfo:
+	case QueryType::StopInfo:
+		out << reader::statistics::ShowInfo(db, q) << std::endl;
+		break;
+	}
+}
+
+} // end of 2 anonymous namespace 
+
+
+void Process(
+	InputReader* reader, 
+	int query_num, 
+	transport::catalogue::TransportCatalogue& db, 
+	std::ostream& out) 
+{
+	reader->Process(query_num);
+	while (!reader->Empty()) {
+		QueryTypeHandler(reader->GetNext(), db, out);
+	}
 }
 
 } // end of namespace reader
