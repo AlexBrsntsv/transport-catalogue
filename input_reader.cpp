@@ -3,7 +3,7 @@
 #include "input_reader.h"
 #include <string_view>
 #include <assert.h>
-#include "stat_reader.h"
+
 
 namespace { // file scope functions
 
@@ -181,9 +181,36 @@ size_t GetPriority(QueryType q) {
 	return result;
 }
 
+//---------  InputReader -----------
+void InputReader::ProcessQuery(Query&& q) {
+	if ((q.type == QueryType::AddStop) && !q.stop_distancies.empty()) {
+		Query extra_q;
+		extra_q.type = QueryType::Distancies;
+		extra_q.stop = q.stop;
+		extra_q.stop_distancies.swap(q.stop_distancies);
+		queue_.Add(extra_q, GetPriority(extra_q.type));
+	}
+	queue_.Add(q, GetPriority(q.type));
+}
+
+Query InputReader::GetNext() {
+	return (queue_.GetNext());
+}
+bool InputReader::Empty() const {
+	return (queue_.Empty());
+}
+
+
+//---------  TextReader -----------
 Query TextReader::ExtractQuery(std::istream& input_) {
 	return GetQuery(input_);
 } // extracts query from source stream
+
+void TextReader::Process(size_t query_num) {
+	for (size_t n = 0; n < query_num; ++n) {
+		ProcessQuery(ExtractQuery(input_));
+	}
+}
 
 bool operator==(const Query& lhs, const Query& rhs) {
 	return
@@ -194,9 +221,14 @@ bool operator==(const Query& lhs, const Query& rhs) {
 		lhs.type == rhs.type;
 }
 
-namespace { // file scope function
 
-void QueryTypeHandler(Query&& q, transport::catalogue::TransportCatalogue& db, std::ostream& out) {
+
+void QueryTypeHandler(
+	Query&& q, 
+	transport::catalogue::TransportCatalogue& db, 
+	transport::statistics::StatisticsBaseOutput* statistics_output
+) {
+	
 	switch (q.type) {
 	case QueryType::AddStop:
 		db.AddStop(q.stop);
@@ -208,29 +240,44 @@ void QueryTypeHandler(Query&& q, transport::catalogue::TransportCatalogue& db, s
 		for (const auto& [to_stop, distance] : q.stop_distancies) {
 			db.SetStopsLength(q.stop.name, to_stop, distance);
 		}
+		break;	
+	case QueryType::StopInfo:
+		if (const auto& stop_info = db.GetBusesForStop(q.stop_name_info); stop_info) {
+			statistics_output->Add(q.stop_name_info, *stop_info);
+		}
+		else {
+			statistics_output->AddError(q.stop_name_info, statistics::RequestError::Stop);
+		}
 		break;
 	case QueryType::BusInfo:
-	case QueryType::StopInfo:
-		out << reader::statistics::ShowInfo(db, q) << std::endl;
+		if (const auto& bus_info = db.GetBusInfo(q.bus_name_info); bus_info) {
+			statistics_output->Add( *bus_info );
+		}
+		else {
+			statistics_output->AddError(q.bus_name_info, statistics::RequestError::Bus);
+		}		
 		break;
 	}
-}
-
-} // end of 2 anonymous namespace 
-
-
-void Process(
-	InputReader* reader, 
-	int query_num, 
-	transport::catalogue::TransportCatalogue& db, 
-	std::ostream& out) 
-{
-	reader->Process(query_num);
-	while (!reader->Empty()) {
-		QueryTypeHandler(reader->GetNext(), db, out);
+	if (statistics_output->Ready()) {
+		statistics_output->Show();
 	}
 }
 
 } // end of namespace reader
 
+void RequestsProcess(
+	transport::reader::InputReader* reader,
+	int query_num,
+	transport::catalogue::TransportCatalogue& db,
+	transport::statistics::StatisticsBaseOutput* statistics_output
+) {
+	reader->Process(query_num);
+	while (!reader->Empty()) {
+		QueryTypeHandler(reader->GetNext(), db, statistics_output);
+	}
+}
+
 } // end of namespace transport
+
+
+

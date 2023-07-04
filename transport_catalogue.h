@@ -30,6 +30,7 @@ struct PairHasher {
 } // end of namespace detailed
 
 struct BusInfo {
+	std::string name;
 	int stops_on_route;
 	int unique_stops;
 	double route_length;

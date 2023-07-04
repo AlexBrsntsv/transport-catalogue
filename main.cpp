@@ -2,11 +2,10 @@
 #include "tests.h"
 #include <sstream>
 #include <iomanip>
-#include "input_reader.h"
+//#include "input_reader.h"
 #include "json_reader.h"
 
 #include "transport_catalogue.h"
-#include "stat_reader.h"
 #include <sstream>
 #include "json.h"
 using namespace std;
@@ -21,13 +20,33 @@ int ReadNumber(std::istream& is) {
 int main() {	
 	//transport::tests::Catalogue();
 	//transport::tests::Input();
+
+    transport::catalogue::TransportCatalogue transport_catalogue;
+    transport::reader::TextReader text_reader(std::cin);
+    transport::statistics::StatisticsTextOutput statistics_text_output(std::cout);
+    
+    // заполнение
+    transport::RequestsProcess(
+        &text_reader, 
+        ReadNumber(std::cin), 
+        transport_catalogue, 
+        &statistics_text_output
+    ); 
+
+    // чтение
+    transport::RequestsProcess(
+        &text_reader, 
+        ReadNumber(std::cin), 
+        transport_catalogue, 
+        &statistics_text_output
+    );
 	
 	
 	//transport::catalogue::TransportCatalogue transport_catalogue;
 	//transport::reader::TextReader text_reader(std::cin);
 	//transport::reader::Process(&text_reader, ReadNumber(std::cin), transport_catalogue, std::cout); // заполнение
 	//transport::reader::Process(&text_reader, ReadNumber(std::cin), transport_catalogue, std::cout); // чтение
-        
+  /*
     std::setlocale(LC_ALL, "Rus");
     std::setlocale(LC_NUMERIC, "en_US.UTF-8"); // чтобы std::stod  работала корректно
 
@@ -65,7 +84,7 @@ int main() {
     transport::catalogue::TransportCatalogue transport_catalogue;
     transport::reader::JsonReader json_reader(ss);
     transport::reader::Process(&json_reader, -1, transport_catalogue, std::cout); // заполнение-чтение
-   
+   */
 
 
 

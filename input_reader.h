@@ -3,6 +3,7 @@
 #include <sstream>
 #include <queue>
 #include "domain.h"
+#include "stat_reader.h"
 
 
 using namespace std::literals;
@@ -84,24 +85,9 @@ public:
 	InputReader(std::istream& input): input_(input){ }	
 	virtual void Process(size_t query_num = 1) = 0;
 	virtual ~InputReader() = default;
-
-	void ProcessQuery(Query&& q){
-		if ((q.type == QueryType::AddStop) && !q.stop_distancies.empty()) {
-			Query extra_q;
-			extra_q.type = QueryType::Distancies;
-			extra_q.stop = q.stop;
-			extra_q.stop_distancies.swap(q.stop_distancies);
-			queue_.Add(extra_q, GetPriority(extra_q.type));
-		}
-		queue_.Add(q, GetPriority(q.type));
-	}
-
-	Query GetNext() {
-		return (queue_.GetNext());
-	}
-	bool Empty() {
-		return (queue_.Empty());
-	}
+	void ProcessQuery(Query&& q);
+	Query GetNext();
+	bool Empty() const;
 
 private:
 	//virtual Query ExtractQuery(std::istream& input_) = 0; // extracts query from source stream
@@ -115,25 +101,23 @@ protected:
 class TextReader final : public InputReader {
 public:
 	TextReader(std::istream& in) : InputReader(in) {}
-	void Process(size_t query_num) override {
-		for (size_t n = 0; n < query_num; ++n) {
-			ProcessQuery(ExtractQuery(input_));
-		}
-	}
+	void Process(size_t query_num) override;
+
 private:
 	Query ExtractQuery(std::istream& input_);
 };
 
 
-void Process(
-	InputReader* reader,
+} // end of namespace reader
+
+void RequestsProcess(
+	transport::reader::InputReader* reader,
 	int query_num,
 	transport::catalogue::TransportCatalogue& db,
-	std::ostream& out);
-
-
-
-} // end of namespace reader
+	transport::statistics::StatisticsBaseOutput* statistics_output
+);
 
 
 } // end of namespace transport
+
+

@@ -102,6 +102,7 @@ std::optional<BusInfo> TransportCatalogue::GetBusInfo(std::string bus_name) cons
 	);
 
 	return BusInfo{ 
+		bus_name,
 		static_cast<int>(bus.route.size()), 
 		GetUniqueStopsNum(bus), 
 		factitial_length, 
