@@ -7,10 +7,11 @@
 #include <vector>
 #include <utility>
 #include <optional>
-#include <variant>
 
 namespace svg {
 
+using Color = std::string;
+inline const Color NoneColor{ "None" };
 
 struct Point {
     Point() = default;
@@ -27,6 +28,7 @@ enum class StrokeLineCap {
     ROUND,
     SQUARE,
 };
+
 std::ostream& operator<< (std::ostream& os, const StrokeLineCap& line_cap);
 
 enum class StrokeLineJoin {
@@ -36,30 +38,9 @@ enum class StrokeLineJoin {
     MITER_CLIP,
     ROUND,
 };
+
 std::ostream& operator<< (std::ostream& os, const StrokeLineJoin& line_join);
 
-struct Rgb {
-    Rgb() = default;
-    Rgb(uint8_t r, uint8_t g, uint8_t b): red(r), green(g), blue(b) { }
-    uint8_t red = 0;
-    uint8_t green = 0;
-    uint8_t blue = 0;
-};
-std::ostream& operator<< (std::ostream& os, const Rgb& rgb);
-
-struct Rgba {
-    Rgba() = default;
-    Rgba(uint8_t r, uint8_t g, uint8_t b, double op): red(r), green(g), blue(b), opacity(op) { }
-    uint8_t red = 0;
-    uint8_t green = 0;
-    uint8_t blue = 0;
-    double opacity = 1.0;
-};
-std::ostream& operator<< (std::ostream& os, const Rgba& rgba);
-
-using Color = std::variant<std::monostate, Rgb, Rgba, std::string>;
-inline const Color NoneColor;
-std::ostream& operator<< (std::ostream& os, const Color& color);
 
 template <typename Owner>
 class PathProps {
@@ -97,11 +78,9 @@ protected:
         if (fill_color_) {
             out << " fill=\""sv << *fill_color_ << "\""sv;
         }
-
         if (stroke_color_) {
             out << " stroke=\""sv << *stroke_color_ << "\""sv;
-        } 
-
+        }
         if (stroke_width_) {
             out << " stroke-width=\""sv << *stroke_width_ << "\""sv;
         }
@@ -111,10 +90,11 @@ protected:
         if (line_join_) {
             out << " stroke-linejoin=\""sv <<  *line_join_  << "\""sv;
         }
+
+
     }
 
 private:
-
     Owner& AsOwner() {
         // static_cast безопасно преобразует *this к Owner&,
         // если класс Owner — наследник PathProps
@@ -172,6 +152,8 @@ public:
 private:
     virtual void RenderObject(const RenderContext& context) const = 0;
 };
+
+
 
 class ObjectContainer {
 public:

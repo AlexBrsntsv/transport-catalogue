@@ -57,7 +57,7 @@ int LoadExp(istream& input) {
 */
 Node LoadNumber(istream& input) {
     std::string s;
-    s.reserve(15);
+    s.reserve(10);
     bool double_number_mark = false;
     bool mark = false;
     char next_char = input.peek();
@@ -74,8 +74,8 @@ Node LoadNumber(istream& input) {
         next_char = input.peek();
     }
     try {
-        if (double_number_mark) return std::stod(s);        
-        else return std::stoi(s);        
+        if (double_number_mark) return std::stod(s);
+        else return std::stoi(s);
     }
     catch (...) {
         throw json::ParsingError("Incorrect json document");
@@ -159,6 +159,7 @@ std::pair<char, bool> GetNextChar(istream& input) {
     return { result, end_of_string_mark };
 }
 
+    /*
 std::optional<char> GetEscapeChar(char c1, char c2) {
     char result;
     if (c1 == '\\') {
@@ -211,7 +212,7 @@ Node LoadString_(istream& input) {
     input >> std::skipws;
     return Node(move(line));
 }
-
+*/
 Node LoadString(istream& input) {
     string line;    
     input >> std::noskipws;
@@ -287,7 +288,7 @@ std::string ShowWithEscapeChars(const std::string& s) {
             result += "\\\""s;
             break;
         case '\t':
-            result += c; // \t не экранируется
+            result += c; // \t РЅРµ СЌРєСЂР°РЅРёСЂСѓРµС‚СЃСЏ
             break;
         case '\\':
             result += "\\\\"s;

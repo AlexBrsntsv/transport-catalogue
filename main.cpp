@@ -1,5 +1,5 @@
 #include <iostream>
-#include "tests.h"
+//#include "tests.h"
 #include <sstream>
 #include <iomanip>
 //#include "input_reader.h"
@@ -19,79 +19,64 @@ int ReadNumber(std::istream& is) {
 
 int main() {	
 	//transport::tests::Catalogue();
-	//transport::tests::Input();
+	//transport::tests::Input();  
 
-    transport::catalogue::TransportCatalogue transport_catalogue;
-    transport::reader::TextReader text_reader(std::cin);
-    transport::statistics::StatisticsTextOutput statistics_text_output(std::cout);
-    
-    // заполнение
-    transport::RequestsProcess(
-        &text_reader, 
-        ReadNumber(std::cin), 
-        transport_catalogue, 
-        &statistics_text_output
-    ); 
-
-    // чтение
-    transport::RequestsProcess(
-        &text_reader, 
-        ReadNumber(std::cin), 
-        transport_catalogue, 
-        &statistics_text_output
-    );
 	
 	
-	//transport::catalogue::TransportCatalogue transport_catalogue;
-	//transport::reader::TextReader text_reader(std::cin);
-	//transport::reader::Process(&text_reader, ReadNumber(std::cin), transport_catalogue, std::cout); // заполнение
-	//transport::reader::Process(&text_reader, ReadNumber(std::cin), transport_catalogue, std::cout); // чтение
-  /*
+  
     std::setlocale(LC_ALL, "Rus");
-    std::setlocale(LC_NUMERIC, "en_US.UTF-8"); // чтобы std::stod  работала корректно
-
+    std::setlocale(LC_NUMERIC, "en_US.UTF-8"); // С‡С‚РѕР±С‹ std::stod СЂР°Р±РѕС‚Р°Р»Р° РєРѕСЂСЂРµРєС‚РЅРѕ
+    
     std::istringstream ss(
         " {"s
         "          \"base_requests\": ["s
         "{"s
         "  \"type\": \"Bus\","s
         "  \"name\" : \"114\","s
-        " \"stops\" : [\"Морской вокзал\", \"Ривьерский мост\"] ,"s
+        " \"stops\" : [\"РњРѕСЂСЃРєРѕР№ РІРѕРєР·Р°Р»\", \"Р РёРІСЊРµСЂСЃРєРёР№ РјРѕСЃС‚\"] ,"s
         "  \"is_roundtrip\" : false"s
         " },"s
         " {"s
         "\"type\": \"Stop\","s
-        "\"name\" : \"Ривьерский мост\","s
+        "\"name\" : \"Р РёРІСЊРµСЂСЃРєРёР№ РјРѕСЃС‚\","s
         " \"latitude\" : 43.587795,"s
         " \"longitude\" : 39.716901,"s
-        "\"road_distances\" : {\"Морской вокзал\": 850}"
+        "\"road_distances\" : {\"РњРѕСЂСЃРєРѕР№ РІРѕРєР·Р°Р»\": 850}"
         "},"s
         "{"s
         " \"type\": \"Stop\","s
-        "\"name\" : \"Морской вокзал\","
+        "\"name\" : \"РњРѕСЂСЃРєРѕР№ РІРѕРєР·Р°Р»\","
         "\"latitude\" : 43.581969,"
         "\"longitude\" : 39.719848,"
-        "\"road_distances\" : {\"Ривьерский мост\": 850}"s
+        "\"road_distances\" : {\"Р РёРІСЊРµСЂСЃРєРёР№ РјРѕСЃС‚\": 850}"s
         "}"s
         "],"s
+        //"\"stat_requests\": ["s
+        //" { \"id\": 1, \"type\" : \"Stop\", \"name\" : \"Р РёРІСЊРµСЂСЃРєРёР№ РјРѕСЃС‚\" },"s
+        //" { \"id\": 2, \"type\" : \"Bus\", \"name\" : \"114\" }"s
+        //"]"s
+        //"}"s
         "\"stat_requests\": ["s
-        " { \"id\": 1, \"type\" : \"Stop\", \"name\" : \"Ривьерский мост\" },"s
-        " { \"id\": 2, \"type\" : \"Bus\", \"name\" : \"114\" }"s
+        " { \"id\": 1, \"type\" : \"Stop\", \"name\" : \"РљР°РєР°СЏ-С‚Рѕ РѕСЃС‚Р°РЅРѕРІРєР°\" },"s
+        " { \"id\": 2, \"type\" : \"Bus\", \"name\" : \"666\" }"s
         "]"s
         "}"s
-    );
+    );  
+    
 
-    transport::catalogue::TransportCatalogue transport_catalogue;
+    transport::catalogue::TransportCatalogue transport_catalogue;    
+    //transport::reader::JsonReader json_reader(std::cin);
     transport::reader::JsonReader json_reader(ss);
-    transport::reader::Process(&json_reader, -1, transport_catalogue, std::cout); // заполнение-чтение
-   */
+    //transport::reader::TextReader text_reader(std::cin);
+    transport::statistics::StatisticsJsonOutput statistics_json_output(std::cout);
 
-
-
-
-
-
-
+    // Р·Р°РїРѕР»РЅРµРЅРёРµ
+    transport::RequestsProcess(
+        &json_reader,
+        0,
+        transport_catalogue,
+        &statistics_json_output
+    );
 
 	return 0;
 }

@@ -4,80 +4,42 @@ namespace svg {
 
 using namespace std::literals;
 
-std::ostream& operator<< (std::ostream& out , const StrokeLineCap& line_cap) {
+std::ostream& operator<< (std::ostream& os, const StrokeLineCap& line_cap) {
+
     switch (line_cap) {
     case StrokeLineCap::BUTT:
-        out << "butt";
+        os << "butt";
         break;
     case StrokeLineCap::ROUND:
-        out << "round";
+        os << "round";
         break;
     case StrokeLineCap::SQUARE:
-        out << "square";
+        os << "square";
         break;
     }
-    return out;
+    return os;
 }
 
-std::ostream& operator<< (std::ostream& out, const StrokeLineJoin& line_join) {
+std::ostream& operator<< (std::ostream& os, const StrokeLineJoin& line_join) {
+  
     switch (line_join) {
     case StrokeLineJoin::ARCS:
-        out << "arcs";
+        os << "arcs";
         break;
     case StrokeLineJoin::BEVEL:
-        out << "bevel";
+        os << "bevel";
         break;
     case StrokeLineJoin::MITER:
-        out << "miter";
+        os << "miter";
         break;
     case StrokeLineJoin::MITER_CLIP:
-        out << "miter-clip";
+        os << "miter-clip";
         break;
     case StrokeLineJoin::ROUND:
-        out << "round";
+        os << "round";
         break;
     }
-    return out;
-}
-
-std::ostream& operator<< (std::ostream& out, const Rgb& rgb) {
-    using namespace std::literals;
-    out << "rgb("s;
-    out << static_cast<int>(rgb.red);
-    out << ","s;
-    out << static_cast<int>(rgb.green);
-    out << ","s;
-    out << static_cast<int>(rgb.blue);
-    out << ")"s;
-    return out;
-}
-
-std::ostream& operator<< (std::ostream& out, const Rgba& rgba) {
-    using namespace std::literals;
-    out << "rgba("s;
-    out << static_cast<int>(rgba.red);
-    out << ","s;
-    out << static_cast<int>(rgba.green);
-    out << ","s;
-    out << static_cast<int>(rgba.blue);
-    out << ","s;
-    out << rgba.opacity;
-    out << ")"s;
-    return out;
-}
-
-std::ostream& operator<< (std::ostream& out, const Color& color) {
-    // ColorHandler struct
-    struct ColorHandler {
-        std::ostream& out;
-        void operator()(Rgb rgb) const { out << rgb; }
-        void operator()(Rgba rgba) const { out << rgba; }
-        void operator()(std::string s) const { out << s; }
-        void operator()(std::monostate) const { out << "none"sv; }
-    };
-
-    std::visit( ColorHandler{out}, color );
-    return out;
+    return os;
 }
 
 void Object::Render(const RenderContext& context) const {
@@ -104,10 +66,11 @@ Circle& Circle::SetRadius(double radius)  {
 void Circle::RenderObject(const RenderContext& context) const {
     auto& out = context.out;
     out << "<circle cx=\""sv << center_.x << "\" cy=\""sv << center_.y << "\" "sv;
-    out << "r=\""sv << radius_ << "\""sv;
+    out << "r=\""sv << radius_ << "\" "sv;
     RenderAttrs(out);
     out << "/>"sv;
 }
+
 
 // ---------- Polyline ------------------
 Polyline& Polyline::AddPoint(Point point) {
@@ -169,7 +132,8 @@ Text& Text::SetData(const std::string& data) {
 
 std::string Text::SvgTextAdaptor(const std::string& source) {
     std::string result = ""s;
-    for (const char c : source) {        
+    for (const char c : source) {
+        
         switch (c) {
             case '"':
                 result += "&quot;";
@@ -188,9 +152,11 @@ std::string Text::SvgTextAdaptor(const std::string& source) {
                 break;
             default:
                 result += c;
-                break;            
+                break;
+            
         }
     }
+
     return result;
 }
 
@@ -202,10 +168,12 @@ void Text::RenderObject(const RenderContext& context) const {
     out << "dx=\"" << offset_.x << "\" dy=\"" << offset_.y << "\" "sv;
     out << "font-size=\""sv << font_size_ << "\""sv;
     if (!font_family_.empty()) { out << " font-family=\""sv << font_family_ << "\""sv; }
-    if (!font_weight_.empty()) { out << " font-weight=\""sv << font_weight_ << "\""sv; }    
+    if (!font_weight_.empty()) { out << " font-weight=\""sv << font_weight_ << "\""sv; }
+    
     out << ">"sv << data_;
     out << "</text>"sv;
 }
+
 
 // Добавляет в svg-документ объект-наследник svg::Object
 void Document::AddPtr(std::unique_ptr<Object>&& obj) {
@@ -221,6 +189,10 @@ void Document::Render(std::ostream& out) const {
     }
     out << tail_;
 }
+
+
+
+
 
 
 

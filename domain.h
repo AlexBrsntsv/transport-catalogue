@@ -30,8 +30,8 @@ struct Bus {
 	}
 };
 
-inline const Stop invalid_stop = { "", {} };	// unexisted stop
-inline const Bus invalid_bus = { "", {} };		// unexisted bus
+const Stop invalid_stop = { "", {} };	// unexisted stop
+const Bus invalid_bus = { "", {} };		// unexisted bus
 
 
 
