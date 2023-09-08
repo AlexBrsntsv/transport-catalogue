@@ -31,6 +31,9 @@ size_t GetPriority(QueryType q) {
 	case QueryType::StopInfo:
 		result = 3;
 		break;
+	case QueryType::DrawSettings:
+		result = 4;
+		break;
 	default:
 		result = static_cast<size_t>(QueryType::QueryTypesAmount);
 		break;
@@ -118,15 +121,41 @@ void QueryTypeHandler(
 void JsonReader::Process(size_t) {
 	json::Document document = json::Load(input_);
 	for (const auto& request_type : document.GetRoot().AsMap()) {
-		for (const auto& request : request_type.second.AsArray()) {
-			ProcessQuery( ExtractQuery( request.AsMap() ) );
+		if (request_type.first == "base_requests"s || request_type.first == "stat_requests"s) {
+			for (const auto& request : request_type.second.AsArray()) {
+				ProcessQuery(ExtractQuery(request.AsMap()));
+			}
+		}
+		else if (request_type.first == "render_settings"s) {
+			auto q = ExtractQuery(request_type.second.AsMap());
 		}
 	}
 }
 
+
 Query JsonReader::ExtractQuery(const json::Dict& source){
 	Query q{};
-	if (source.at("type").AsString() == "Stop") {
+	if (auto mark = source.find("type"); mark == source.end()) {
+		q.type = QueryType::DrawSettings;
+		q.render_settings.width = source.at("width").AsDouble();
+		q.render_settings.height = source.at("height").AsDouble();
+		q.render_settings.padding = source.at("padding").AsDouble();
+		q.render_settings.line_width = source.at("line_width").AsDouble();
+		q.render_settings.stop_radius = source.at("stop_radius").AsDouble();
+		q.render_settings.bus_label_font_size = source.at("bus_label_font_size").AsInt();
+		q.render_settings.bus_label_offset.first = source.at("bus_label_offset").AsArray().at(0).AsDouble();
+		q.render_settings.bus_label_offset.second = source.at("bus_label_offset").AsArray().at(1).AsDouble();
+		q.render_settings.stop_label_font_size = source.at("stop_label_font_size").AsInt();
+		q.render_settings.stop_label_offset.first = source.at("stop_label_offset").AsArray().at(0).AsDouble();
+		q.render_settings.stop_label_offset.second = source.at("stop_label_offset").AsArray().at(1).AsDouble();
+		//q.render_settings.underlayer_color
+		q.render_settings.underlayer_width = source.at("underlayer_width").AsDouble();
+		//q.render_settings.color_palette
+
+
+
+	}
+	else if (source.at("type").AsString() == "Stop") {
 		if (const auto it = source.find("id"); it != source.end()) {
 			q.type = QueryType::StopInfo;
 			q.id = it->second.AsInt();
@@ -162,6 +191,7 @@ Query JsonReader::ExtractQuery(const json::Dict& source){
 			}
 		}
 	}
+
 
 	return q;
 }

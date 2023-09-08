@@ -2,8 +2,11 @@
 #include "transport_catalogue.h"
 #include <sstream>
 #include <queue>
+#include <memory.h>
 #include "domain.h"
 #include "request_handler.h"
+#include "map_renderer.h"
+
 
 
 using namespace std::literals;
@@ -17,7 +20,8 @@ enum class QueryType {
 	AddStop,
 	Distancies,
 	BusInfo,
-	StopInfo,
+	StopInfo,	
+	DrawSettings,
 	QueryTypesAmount,
 	Invalid
 };
@@ -32,6 +36,7 @@ struct Query {
 	std::pair <std::string, std::vector<std::string>> busname_to_route;
 	domain::Stop stop;
 	std::vector<std::pair<std::string, int>> stop_distancies;
+	RenderSettings render_settings;
 };
 
 bool operator==(const Query& lhs, const Query& rhs);
@@ -106,6 +111,7 @@ public:
 
 private:
 	Query ExtractQuery(const json::Dict& source);
+	Query ExtractQuery(const json::Array& source);
 };
 
 
