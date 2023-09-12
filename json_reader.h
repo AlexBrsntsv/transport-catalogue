@@ -21,7 +21,6 @@ enum class QueryType {
 	Distancies,
 	BusInfo,
 	StopInfo,	
-	DrawSettings,
 	QueryTypesAmount,
 	Invalid
 };
@@ -92,26 +91,27 @@ public:
 	virtual ~InputReader() = default;
 	void ProcessQuery(Query&& q);
 	Query GetNext();
-	bool Empty() const;
+	bool Empty() const;	
 
 private:
 	//virtual Query ExtractQuery(std::istream& input_) = 0; // extracts query from source stream
 	InputPriorityQueue<Query> queue_{ static_cast<size_t>( QueryType::QueryTypesAmount ) };
+	
 
 protected:
-	std::istream& input_;
+	std::istream& input_;	
 };    
     
 //---------------- json ---------------------
 class JsonReader final : public transport::reader::InputReader {
 public:
 	JsonReader(std::istream& input) : InputReader(input) { }
-
 	void Process(size_t) override;
+	json::Dict& GetRawRenderSettings();
 
 private:
 	Query ExtractQuery(const json::Dict& source);
-	Query ExtractQuery(const json::Array& source);
+	json::Dict raw_render_settings;	
 };
 
 

@@ -31,9 +31,7 @@ size_t GetPriority(QueryType q) {
 	case QueryType::StopInfo:
 		result = 3;
 		break;
-	case QueryType::DrawSettings:
-		result = 4;
-		break;
+		
 	default:
 		result = static_cast<size_t>(QueryType::QueryTypesAmount);
 		break;
@@ -50,6 +48,7 @@ void InputReader::ProcessQuery(Query&& q) {
 		extra_q.stop_distancies.swap(q.stop_distancies);
 		queue_.Add(extra_q, GetPriority(extra_q.type));
 	}
+	if (q.type == QueryType::Invalid) return;
 	queue_.Add(q, GetPriority(q.type));
 }
 
@@ -112,9 +111,11 @@ void QueryTypeHandler(
         break;
         
 	}
+	/*
 	if (statistics_output->Ready()) {
 		statistics_output->Show();
 	}
+	*/
 }
 
 //---------------- json_reader -------------------
@@ -127,35 +128,19 @@ void JsonReader::Process(size_t) {
 			}
 		}
 		else if (request_type.first == "render_settings"s) {
-			auto q = ExtractQuery(request_type.second.AsMap());
+			raw_render_settings = request_type.second.AsMap();				
 		}
 	}
+}
+
+json::Dict& JsonReader::GetRawRenderSettings() { 
+	return raw_render_settings; 
 }
 
 
 Query JsonReader::ExtractQuery(const json::Dict& source){
 	Query q{};
-	if (auto mark = source.find("type"); mark == source.end()) {
-		q.type = QueryType::DrawSettings;
-		q.render_settings.width = source.at("width").AsDouble();
-		q.render_settings.height = source.at("height").AsDouble();
-		q.render_settings.padding = source.at("padding").AsDouble();
-		q.render_settings.line_width = source.at("line_width").AsDouble();
-		q.render_settings.stop_radius = source.at("stop_radius").AsDouble();
-		q.render_settings.bus_label_font_size = source.at("bus_label_font_size").AsInt();
-		q.render_settings.bus_label_offset.first = source.at("bus_label_offset").AsArray().at(0).AsDouble();
-		q.render_settings.bus_label_offset.second = source.at("bus_label_offset").AsArray().at(1).AsDouble();
-		q.render_settings.stop_label_font_size = source.at("stop_label_font_size").AsInt();
-		q.render_settings.stop_label_offset.first = source.at("stop_label_offset").AsArray().at(0).AsDouble();
-		q.render_settings.stop_label_offset.second = source.at("stop_label_offset").AsArray().at(1).AsDouble();
-		//q.render_settings.underlayer_color
-		q.render_settings.underlayer_width = source.at("underlayer_width").AsDouble();
-		//q.render_settings.color_palette
-
-
-
-	}
-	else if (source.at("type").AsString() == "Stop") {
+	if (source.at("type").AsString() == "Stop") {
 		if (const auto it = source.find("id"); it != source.end()) {
 			q.type = QueryType::StopInfo;
 			q.id = it->second.AsInt();
@@ -219,8 +204,11 @@ void RequestsProcess(
 	while (!reader->Empty()) {
 		QueryTypeHandler(reader->GetNext(), db, statistics_output);
 	}
-	statistics_output->Show();
+	//statistics_output->Show();
 }
+
+
+
 
 } // end of namespace transport
 

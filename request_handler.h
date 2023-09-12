@@ -43,6 +43,7 @@ private:
 #include <queue>
 #include <iostream>
 #include "json.h"
+#include "domain.h"
 
 
 namespace transport {
@@ -95,6 +96,8 @@ public:
 private:
 	json::Array buffer_;
 };
+
+std::vector<geo::Coordinates> GetStopsCoordinatesForBuses(const transport::catalogue::TransportCatalogue& db);
 
 
 } // end of namespace statistics

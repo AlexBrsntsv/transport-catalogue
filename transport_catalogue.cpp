@@ -155,6 +155,47 @@ double  TransportCatalogue::GetStopsGeoLength(const Stop& stop_from, const Stop&
 	return ComputeDistance(stop_from.coordinates, stop_to.coordinates);
 }
 
+const std::deque<domain::Bus>& TransportCatalogue::GetAllBuses() const{
+	return buses_;
+}
+
+std::set<std::string_view> TransportCatalogue::GetBusesList() const {
+	std::set<std::string_view> result;
+	for (const auto &element : busname_to_bus_) {
+		result.insert(element.first);
+	}
+	return result;
+}
+
+/*
+std::vector<std::string_view>  TransportCatalogue::GetStopsList() {
+	std::vector<std::string_view> result;
+	result.resize(stopname_to_stop_.size());
+	std::transform(
+		stopname_to_stop_.begin(),
+		stopname_to_stop_.end(),
+		result.begin(),
+		[](const auto element) {
+			return element.first;
+		}
+	);
+	return result;
+}
+
+std::vector<std::string_view>  TransportCatalogue::GetBusesList() {
+	std::vector<std::string_view> result;
+	result.resize( busname_to_bus_.size() );
+	std::transform(
+		busname_to_bus_.begin(), 
+		busname_to_bus_.end(), 
+		result.begin(),
+		[](const auto element) {
+			return element.first;
+		}
+	);
+	return result;
+}
+*/
 
 } // end of namespace catalogue
 

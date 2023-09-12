@@ -114,6 +114,16 @@ void StatisticsJsonOutput::Show() {
 }
 bool StatisticsJsonOutput::Ready() { return false; }
 
+std::vector<geo::Coordinates> GetStopsCoordinatesForBuses(const transport::catalogue::TransportCatalogue& db) {
+	std::vector<geo::Coordinates> result;
+	for (const domain::Bus& bus : db.GetAllBuses()) {
+		for (const auto& stop : bus.route) {
+			result.push_back(stop->coordinates);
+		}
+	}
+	return result;
+}
+
 
 } // end of namespace statistics
 

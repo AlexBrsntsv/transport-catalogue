@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <numeric>
 #include "domain.h"
+#include <set>
 
 
 
@@ -46,6 +47,10 @@ public:
 	void  SetStopsLength(std::string name_from, std::string name_to, double length);
 	double GetStopsLength(const domain::Stop& stop_from, const domain::Stop& stop_to) const;
 	double GetStopsGeoLength(const domain::Stop& stop_from, const domain::Stop& stop_to) const;
+
+	//const auto& GetAllStops();
+	const std::deque<domain::Bus>& GetAllBuses() const;
+	std::set<std::string_view> GetBusesList() const;
 
 	void AddStop(domain::Stop stop);
 	const domain::Stop& FindStop(std::string stop_name) const;
