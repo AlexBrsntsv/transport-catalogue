@@ -44,9 +44,9 @@ const Stop& TransportCatalogue::FindStop(std::string stop_name) const {
 	}
 }
 
-bool TransportCatalogue::AddBus(const std::string& bus_name, const std::vector<std::string>& route) {
+bool TransportCatalogue::AddBus(const std::string& bus_name, const std::vector<std::string>& route, bool is_roundtrip) {
 	using namespace detailed;
-	Bus bus_to_add = { bus_name, {} };
+	Bus bus_to_add = { bus_name, {}, is_roundtrip };
 	for (const std::string& stop_name : route) {
 		if (const Stop& curr_stop = FindStop(stop_name); StopIsValid(curr_stop)) {
 			bus_to_add.route.push_back(&curr_stop);
@@ -127,6 +127,14 @@ std::optional<std::vector<std::string_view>> TransportCatalogue::GetBusesForStop
 	}
 	else {
 		return std::nullopt;
+	}
+	return result;
+}
+
+std::set<std::string> TransportCatalogue::GetUniqueStopNamesForBus(const domain::Bus& bus) const{
+	std::set<std::string> result;
+	for (const domain::Stop* stop : bus.route) {
+		result.insert(stop->name);
 	}
 	return result;
 }

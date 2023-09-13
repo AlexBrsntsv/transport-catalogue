@@ -21,6 +21,7 @@ struct Stop {
 struct Bus {
 	std::string name;
 	std::vector<const Stop*> route;
+	bool is_roundtrip;
 
 	bool operator==(const Bus& other) const {
 		return route == other.route && name == other.name;
@@ -31,7 +32,7 @@ struct Bus {
 };
 
 const Stop invalid_stop = { "", {} };	// unexisted stop
-const Bus invalid_bus = { "", {} };		// unexisted bus
+const Bus invalid_bus = { "", {}, false };		// unexisted bus
 
 
 

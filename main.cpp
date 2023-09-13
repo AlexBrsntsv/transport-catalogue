@@ -135,20 +135,23 @@ int main() {
     RenderSettings rs = ExtractRenderSettings( json_reader.GetRawRenderSettings() );
     std::vector<geo::Coordinates> stops_coordinates = transport::statistics::GetStopsCoordinatesForBuses(transport_catalogue);
     MapRenderer map(rs, stops_coordinates);
+    std::set<std::string> unique_stop_names_;
     for (std::string_view busname : transport_catalogue.GetBusesList()){
         const domain::Bus& next_bus = transport_catalogue.FindBus(std::string(busname));
-        std::vector<geo::Coordinates> route_nodes_coordinates;
-        route_nodes_coordinates.resize( next_bus.route.size() );
-        std::transform(
-            next_bus.route.begin(),
-            next_bus.route.end(),
-            route_nodes_coordinates.begin(),
-            [](const domain::Stop* stop) {return stop->coordinates; }
-        );
-        map.AddRouteView( std::move(route_nodes_coordinates) );
+        if (next_bus == domain::invalid_bus) {
+            continue;
+        }
+        auto stops_for_bus = transport_catalogue.GetUniqueStopNamesForBus(next_bus);
+        unique_stop_names_.insert(stops_for_bus.begin(), stops_for_bus.end() );
+        map.AddBus(next_bus);
     }    
+    for (const std::string& stop_name : unique_stop_names_) {
+        const domain::Stop& next_stop = transport_catalogue.FindStop(stop_name);
+        if (next_stop != domain::invalid_stop) {
+            map.AddStop(next_stop);
+        }        
+    }
     map.Render(std::cout);
-
 
 	return 0;
 }

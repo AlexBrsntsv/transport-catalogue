@@ -33,9 +33,10 @@ struct Query {
 	std::string stop_name_info;
 	std::string bus_name_info;
 	std::pair <std::string, std::vector<std::string>> busname_to_route;
+	bool is_roundtrip;
 	domain::Stop stop;
 	std::vector<std::pair<std::string, int>> stop_distancies;
-	RenderSettings render_settings;
+	//RenderSettings render_settings;
 };
 
 bool operator==(const Query& lhs, const Query& rhs);

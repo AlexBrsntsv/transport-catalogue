@@ -81,7 +81,7 @@ void QueryTypeHandler(
 		db.AddStop(q.stop);
 		break;
 	case QueryType::AddBus:
-		db.AddBus(q.busname_to_route.first, q.busname_to_route.second);
+		db.AddBus(q.busname_to_route.first, q.busname_to_route.second, q.is_roundtrip);
 		break;
 	case QueryType::Distancies:
 		for (const auto& [to_stop, distance] : q.stop_distancies) {
@@ -162,18 +162,20 @@ Query JsonReader::ExtractQuery(const json::Dict& source){
 			q.bus_name_info = source.at("name").AsString();
 		}
 		else {
-			q.type = QueryType::AddBus;
+			q.type = QueryType::AddBus;			
 			q.busname_to_route.first = source.at("name").AsString();
-			bool is_round_trip = source.at("is_roundtrip").AsBool();
+			q.is_roundtrip = source.at("is_roundtrip").AsBool();
 			const auto& stops = source.at("stops").AsArray();
 			for (const auto& stop : stops ){
 				q.busname_to_route.second.push_back(stop.AsString());
-			}
-			if (!is_round_trip) {
+			}			
+			
+			if (!q.is_roundtrip) {
 				auto& route = q.busname_to_route.second;
 				route.resize(2 * route.size() - 1);
 				std::copy(route.begin(), std::prev(route.end()), route.rbegin());
 			}
+			
 		}
 	}
 

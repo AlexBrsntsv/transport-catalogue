@@ -50,11 +50,12 @@ public:
 
 	//const auto& GetAllStops();
 	const std::deque<domain::Bus>& GetAllBuses() const;
+	std::set<std::string> GetUniqueStopNamesForBus(const domain::Bus& bus) const;
 	std::set<std::string_view> GetBusesList() const;
 
 	void AddStop(domain::Stop stop);
 	const domain::Stop& FindStop(std::string stop_name) const;
-	bool AddBus(const std::string& bus_name, const std::vector<std::string>& route);	
+	bool AddBus(const std::string& bus_name, const std::vector<std::string>& route, bool is_roundtrip = false);
 	const domain::Bus& FindBus(std::string bus_name) const;
 
 	std::optional<BusInfo> GetBusInfo(std::string bus_name) const;

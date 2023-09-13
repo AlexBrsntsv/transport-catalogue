@@ -110,7 +110,7 @@ SphereProjector::SphereProjector(PointInputIt points_begin, PointInputIt points_
 
 
 
-class MapRenderer: public svg::Document {
+class MapRenderer: private svg::Document {
 public:
     MapRenderer(RenderSettings rs, const std::vector<geo::Coordinates>& coordinates_list)
         :render_settings_(rs)
@@ -119,12 +119,19 @@ public:
 
     }
     
-    void AddRouteView(std::vector<geo::Coordinates>&& coordinates);    
+    void AddBus(const domain::Bus& bus);    
+    void AddStop(const domain::Stop& stop);
+    void Render(std::ostream& out);
 
-private:    
-    size_t color_idx_ = 0;    
+private:     
+    
+    RenderSettings render_settings_;
     SphereProjector sphere_projector_;
-    RenderSettings render_settings_;   
+    size_t color_idx_ = 0;
+    std::vector<std::unique_ptr<svg::Object>> bus_routes_;
+    std::vector<std::unique_ptr<svg::Object>> bus_names_;
+    std::vector<std::unique_ptr<svg::Object>> stops_;
+    std::vector<std::unique_ptr<svg::Object>> stop_names_;
 };
 
 
