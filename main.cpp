@@ -11,130 +11,158 @@
 #include "json.h"
 using namespace std;
 using namespace transport;
+using namespace renderer;
 
 int ReadNumber(std::istream& is) {		
 	std::string s;
 	std::getline(is, s);
 	return std::stoi(s);
 }
-//
-//
-svg::Color GetSvgColor(const json::Node& source) {
-    if (source.IsArray()) {
-        auto& raw_color = source.AsArray();
-        if (raw_color.size() == 3) {
-            return svg::Rgb{ 
-                static_cast<uint8_t>( raw_color[0].AsInt() ), 
-                static_cast<uint8_t>(raw_color[1].AsInt() ),
-                static_cast<uint8_t>(raw_color[2].AsInt() ) 
-            };
-        }
-        else if (raw_color.size() == 4) {
-            return svg::Rgba{ 
-                static_cast<uint8_t>( raw_color[0].AsInt() ),
-                static_cast<uint8_t>( raw_color[1].AsInt() ),
-                static_cast<uint8_t>( raw_color[2].AsInt() ),
-                raw_color[3].AsDouble()
-            };
-        }
-    }
-    else if (source.IsString()) {
-        return source.AsString();
-    }
-    return "none"s;
-}
 
-RenderSettings ExtractRenderSettings(const json::Dict& source);
+std::vector<geo::Coordinates> GetStopsCoordinatesForBuses(const transport::catalogue::TransportCatalogue& db) {
+    std::vector<geo::Coordinates> result;
+    for (const domain::Bus& bus : db.GetAllBuses()) {
+        for (const auto& stop : bus.route) {
+            result.push_back(stop->coordinates);
+        }
+    }
+    return result;
+}
+//
+//
+//svg::Color GetSvgColor(const json::Node& source) {
+//    if (source.IsArray()) {
+//        auto& raw_color = source.AsArray();
+//        if (raw_color.size() == 3) {
+//            return svg::Rgb{ 
+//                static_cast<uint8_t>( raw_color[0].AsInt() ), 
+//                static_cast<uint8_t>(raw_color[1].AsInt() ),
+//                static_cast<uint8_t>(raw_color[2].AsInt() ) 
+//            };
+//        }
+//        else if (raw_color.size() == 4) {
+//            return svg::Rgba{ 
+//                static_cast<uint8_t>( raw_color[0].AsInt() ),
+//                static_cast<uint8_t>( raw_color[1].AsInt() ),
+//                static_cast<uint8_t>( raw_color[2].AsInt() ),
+//                raw_color[3].AsDouble()
+//            };
+//        }
+//    }
+//    else if (source.IsString()) {
+//        return source.AsString();
+//    }
+//    return "none"s;
+//}
+
+
 
 int main() {	
 	//transport::tests::Catalogue();
 	//transport::tests::Input();  
+    std::setlocale(LC_ALL, "Russian");
+    std::cout << "Ðóññêèé ÿçûê!"s << std::endl;
 
 	
 	
   
-    std::setlocale(LC_ALL, "Rus");
-    std::setlocale(LC_NUMERIC, "en_US.UTF-8"); // Ñ‡Ñ‚Ð¾Ð±Ñ‹ std::stod Ñ€Ð°Ð±Ð¾Ñ‚Ð°Ð»Ð° ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ð¾
     
-    //std::istringstream ss(
-    //    " {"s
-    //    "          \"base_requests\": ["s
-    //    "{"s
-    //    "  \"type\": \"Bus\","s
-    //    "  \"name\" : \"114\","s
-    //    " \"stops\" : [\"ÐœÐ¾Ñ€ÑÐºÐ¾Ð¹ Ð²Ð¾ÐºÐ·Ð°Ð»\", \"Ð Ð¸Ð²ÑŒÐµÑ€ÑÐºÐ¸Ð¹ Ð¼Ð¾ÑÑ‚\"] ,"s
-    //    "  \"is_roundtrip\" : false"s
-    //    " },"s
-    //    " {"s
-    //    "\"type\": \"Stop\","s
-    //    "\"name\" : \"Ð Ð¸Ð²ÑŒÐµÑ€ÑÐºÐ¸Ð¹ Ð¼Ð¾ÑÑ‚\","s
-    //    " \"latitude\" : 43.587795,"s
-    //    " \"longitude\" : 39.716901,"s
-    //    "\"road_distances\" : {\"ÐœÐ¾Ñ€ÑÐºÐ¾Ð¹ Ð²Ð¾ÐºÐ·Ð°Ð»\": 850}"
-    //    "},"s
-    //    "{"s
-    //    " \"type\": \"Stop\","s
-    //    "\"name\" : \"ÐœÐ¾Ñ€ÑÐºÐ¾Ð¹ Ð²Ð¾ÐºÐ·Ð°Ð»\","
-    //    "\"latitude\" : 43.581969,"
-    //    "\"longitude\" : 39.719848,"
-    //    "\"road_distances\" : {\"Ð Ð¸Ð²ÑŒÐµÑ€ÑÐºÐ¸Ð¹ Ð¼Ð¾ÑÑ‚\": 850}"s
-    //    "}"s
-    //    "],"s
-    //    "\"stat_requests\": ["s
-    //    " { \"id\": 1, \"type\" : \"Stop\", \"name\" : \"Ð Ð¸Ð²ÑŒÐµÑ€ÑÐºÐ¸Ð¹ Ð¼Ð¾ÑÑ‚\" },"s
-    //    " { \"id\": 2, \"type\" : \"Bus\", \"name\" : \"114\" }"s
-    //    "]"s
-    //    "}"s
-
-    //);  
+    std::setlocale(LC_NUMERIC, "en_US.UTF-8"); // ÷òîáû std::stod ðàáîòàëà êîððåêòíî
+    
+    
     std::istringstream ss(
-        
         " {"s
-        "          \"render_settings\": "s
+        "          \"base_requests\": ["s
         "{"s
-        "\"width\": 1200.0,"s
-        " \"height\" : 1200.0,"s
-        " \"padding\" : 50.0,"s
-        " \"line_width\" : 14.0,"s
-        "  \"stop_radius\" : 5.0,"s
-
-        " \"bus_label_font_size\" : 20,"s
-        "\"bus_label_offset\" : [7.0, 15.0] ,"s
-
-        " \"stop_label_font_size\" : 20,"s
-        "\"stop_label_offset\" : [7.0, -3.0] ,"s
-
-        "\"underlayer_color\" : [253, 254, 255, 0.85] ,"s
-        "\"underlayer_width\" : 3.0,"s
-
-        " \"color_palette\" : ["s
-        " \"green\","s
-        " [255, 160, 0],"s
-        " \"red\""s
-        " ]"
+        "  \"type\": \"Bus\","s
+        "  \"name\" : \"114\","s
+        " \"stops\" : [\"Ìîðñêîé âîêçàë\", \"Ðèâüåðñêèé ìîñò\"] ,"s
+        "  \"is_roundtrip\" : false"s
+        " },"s
+        " {"s
+        "\"type\": \"Stop\","s
+        "\"name\" : \"Ðèâüåðñêèé ìîñò\","s
+        " \"latitude\" : 43.587795,"s
+        " \"longitude\" : 39.716901,"s
+        "\"road_distances\" : {\"Ìîðñêîé âîêçàë\": 850}"
+        "},"s
+        "{"s
+        " \"type\": \"Stop\","s
+        "\"name\" : \"Ìîðñêîé âîêçàë\","
+        "\"latitude\" : 43.581969,"
+        "\"longitude\" : 39.719848,"
+        "\"road_distances\" : {\"Ðèâüåðñêèé ìîñò\": 850}"s
         "}"s
-        " }"s
-        
+        "],"s
+        "\"stat_requests\": ["s
+        " { \"id\": 1, \"type\" : \"Stop\", \"name\" : \"Ðèâüåðñêèé ìîñò\" },"s
+        " { \"id\": 2, \"type\" : \"Bus\", \"name\" : \"114\" }"s
+        "]"s
+        "}"s
+    );  
 
-    );
+
+    //std::istringstream ss(
+    //    
+    //    " {"s
+    //    "          \"render_settings\": "s
+    //    "{"s
+    //    "\"width\": 1200.0,"s
+    //    " \"height\" : 1200.0,"s
+    //    " \"padding\" : 50.0,"s
+    //    " \"line_width\" : 14.0,"s
+    //    "  \"stop_radius\" : 5.0,"s
+
+    //    " \"bus_label_font_size\" : 20,"s
+    //    "\"bus_label_offset\" : [7.0, 15.0] ,"s
+
+    //    " \"stop_label_font_size\" : 20,"s
+    //    "\"stop_label_offset\" : [7.0, -3.0] ,"s
+
+    //    "\"underlayer_color\" : [253, 254, 255, 0.85] ,"s
+    //    "\"underlayer_width\" : 3.0,"s
+
+    //    " \"color_palette\" : ["s
+    //    " \"green\","s
+    //    " [255, 160, 0],"s
+    //    " \"red\""s
+    //    " ]"
+    //    "}"s
+    //    " }"s
+    //    
+
+    //);
         
     
     transport::catalogue::TransportCatalogue transport_catalogue;    
     //transport::reader::JsonReader json_reader(std::cin);
-    transport::reader::JsonReader json_reader(std::cin);
-    //transport::reader::TextReader text_reader(std::cin);
-    transport::statistics::StatisticsJsonOutput statistics_json_output(std::cout);
+    transport::reader::JsonReader json_reader(ss);
+    transport::requests::QueriesQueue q = json_reader.Process();
+    // send data to transport catalogue
+    transport::requests::ProccessInputTypeQueries(transport_catalogue, q);
+    auto coordinates_array = GetStopsCoordinatesForBuses(transport_catalogue);
+    renderer::MapRenderer map(q.GetRendererSettings(), coordinates_array);
 
-    // Ð·Ð°Ð¿Ð¾Ð»Ð½ÐµÐ½Ð¸Ðµ
-    transport::RequestsProcess(
-        &json_reader,
-        0,
-        transport_catalogue,
-        &statistics_json_output
-    );
+    
+
+    
+    
+    //transport::reader::TextReader text_reader(std::cin);
+    //transport::statistics::StatisticsJsonOutput statistics_json_output(std::cout);
+
+    // çàïîëíåíèå
+    //transport::RequestsProcess(
+    //    &json_reader,
+    //    0,
+    //    transport_catalogue,
+    //    &statistics_json_output
+    //);
+
+    /*
     RenderSettings rs = ExtractRenderSettings( json_reader.GetRawRenderSettings() );
     std::vector<geo::Coordinates> stops_coordinates = transport::statistics::GetStopsCoordinatesForBuses(transport_catalogue);
     MapRenderer map(rs, stops_coordinates);
+    
     std::set<std::string> unique_stop_names_;
     for (std::string_view busname : transport_catalogue.GetBusesList()){
         const domain::Bus& next_bus = transport_catalogue.FindBus(std::string(busname));
@@ -151,37 +179,37 @@ int main() {
             map.AddStop(next_stop);
         }        
     }
-    map.Render(std::cout);
+    map.Render(std::cout);*/
 
 	return 0;
 }
 
 
-RenderSettings ExtractRenderSettings(const json::Dict& source) {
-    RenderSettings render_settings;
-    try {
-        render_settings.width = source.at("width").AsDouble();
-        render_settings.height = source.at("height").AsDouble();
-        render_settings.padding = source.at("padding").AsDouble();
-        render_settings.line_width = source.at("line_width").AsDouble();
-        render_settings.stop_radius = source.at("stop_radius").AsDouble();
-        render_settings.bus_label_font_size = source.at("bus_label_font_size").AsInt();
-        render_settings.bus_label_offset.first = source.at("bus_label_offset").AsArray().at(0).AsDouble();
-        render_settings.bus_label_offset.second = source.at("bus_label_offset").AsArray().at(1).AsDouble();
-        render_settings.stop_label_font_size = source.at("stop_label_font_size").AsInt();
-        render_settings.stop_label_offset.first = source.at("stop_label_offset").AsArray().at(0).AsDouble();
-        render_settings.stop_label_offset.second = source.at("stop_label_offset").AsArray().at(1).AsDouble();  
-        render_settings.underlayer_color = GetSvgColor(source.at("underlayer_color"));
-        render_settings.underlayer_width = source.at("underlayer_width").AsDouble();
-        for (auto next_color : source.at("color_palette").AsArray()) {
-            render_settings.color_palette.push_back( GetSvgColor(next_color) );
-        }
-        //q.render_settings.color_palette
-    }
-    catch (...)
-    {
-        std::cout << "Wrong render settings format"s;
-    }
-    return render_settings;
-}
+//RenderSettings ExtractRenderSettings(const json::Dict& source) {
+//    RenderSettings render_settings;
+//    try {
+//        render_settings.width = source.at("width").AsDouble();
+//        render_settings.height = source.at("height").AsDouble();
+//        render_settings.padding = source.at("padding").AsDouble();
+//        render_settings.line_width = source.at("line_width").AsDouble();
+//        render_settings.stop_radius = source.at("stop_radius").AsDouble();
+//        render_settings.bus_label_font_size = source.at("bus_label_font_size").AsInt();
+//        render_settings.bus_label_offset.first = source.at("bus_label_offset").AsArray().at(0).AsDouble();
+//        render_settings.bus_label_offset.second = source.at("bus_label_offset").AsArray().at(1).AsDouble();
+//        render_settings.stop_label_font_size = source.at("stop_label_font_size").AsInt();
+//        render_settings.stop_label_offset.first = source.at("stop_label_offset").AsArray().at(0).AsDouble();
+//        render_settings.stop_label_offset.second = source.at("stop_label_offset").AsArray().at(1).AsDouble();  
+//        render_settings.underlayer_color = GetSvgColor(source.at("underlayer_color"));
+//        render_settings.underlayer_width = source.at("underlayer_width").AsDouble();
+//        for (auto next_color : source.at("color_palette").AsArray()) {
+//            render_settings.color_palette.push_back( GetSvgColor(next_color) );
+//        }
+//        //q.render_settings.color_palette
+//    }
+//    catch (...)
+//    {
+//        std::cout << "Wrong render settings format"s;
+//    }
+//    return render_settings;
+//}
 

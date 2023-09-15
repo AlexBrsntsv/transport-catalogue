@@ -14,6 +14,7 @@
  * Пока можете оставить файл пустым.
  */
 
+namespace renderer {
 
  // SphereProjector
 bool IsZero(double value) {
@@ -28,7 +29,13 @@ svg::Point SphereProjector::operator()(geo::Coordinates coords) const {
     };
 }
 
+MapRenderer::MapRenderer(RenderSettings&& rs, const transport::catalogue::TransportCatalogue& db): render_settings_(std::move(rs)) {
 
+
+
+
+
+}
 
 
 
@@ -155,33 +162,14 @@ void MapRenderer::AddStop(const domain::Stop& stop) {
 
     stop_names_.push_back(std::move(stop_name_base_view));
     stop_names_.push_back(std::move(stop_name_view));
-
-
-
-
-
-
-
-
-
 }
 
-//void MapRenderer::AddRouteView(std::vector<geo::Coordinates>&& geo_coords) {
-//    if (geo_coords.empty()) return;
-//    
-//    auto route_view = std::make_unique<svg::Polyline>();
-//    for (const auto& node_coordinates : geo_coords) {
-//        route_view->AddPoint( sphere_projector_(node_coordinates) );
-//    }
-//    route_view->SetFillColor(svg::NoneColor);
-//    route_view->SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
-//    route_view->SetStrokeLineCap(svg::StrokeLineCap::ROUND);
-//    route_view->SetStrokeColor( render_settings_.color_palette.at(color_idx_) );
-//    route_view->SetStrokeWidth( render_settings_.line_width );
-//    if ( ++color_idx_ >= render_settings_.color_palette.size() ) {
-//        color_idx_ = 0;
-//    }
-//    AddPtr( std::move(route_view) );
-//}
+const RenderSettings& MapRenderer::GetSettings() const {
+    return render_settings_;
+}
+
+
+
+} // end of namespace renderer
 
 

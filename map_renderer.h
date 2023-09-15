@@ -10,12 +10,16 @@
 #include <iostream>
 #include <optional>
 #include <vector>
+#include "transport_catalogue.h"
 
 /*
  * В этом файле вы можете разместить код, отвечающий за визуализацию карты маршрутов в формате SVG.
  * Визуализация маршрутов вам понадобится во второй части итогового проекта.
  * Пока можете оставить файл пустым.
  */
+
+
+namespace renderer{
 
 struct RenderSettings {
 	double width;
@@ -112,16 +116,20 @@ SphereProjector::SphereProjector(PointInputIt points_begin, PointInputIt points_
 
 class MapRenderer: private svg::Document {
 public:
-    MapRenderer(RenderSettings rs, const std::vector<geo::Coordinates>& coordinates_list)
+    MapRenderer(const RenderSettings& rs, const std::vector<geo::Coordinates>& coordinates_list)
         :render_settings_(rs)
         , sphere_projector_(coordinates_list.begin(), coordinates_list.end(), rs.width, rs.height, rs.padding)
     {
 
     }
+
+    //MapRenderer(RenderSettings&& rs, const transport::catalogue::TransportCatalogue& db);
     
     void AddBus(const domain::Bus& bus);    
     void AddStop(const domain::Stop& stop);
     void Render(std::ostream& out);
+    const RenderSettings& GetSettings() const;
+
 
 private:     
     
@@ -135,3 +143,4 @@ private:
 };
 
 
+} // end of namespace renderer

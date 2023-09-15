@@ -3,151 +3,97 @@
 #include "json_reader.h"
 #include <string_view>
 #include <assert.h>
+#include <iostream>
 
-
-using transport::reader::Query;
-using transport::reader::QueryType;
 
 
 namespace transport{
 
 namespace reader {
 
-size_t GetPriority(QueryType q) {
-	size_t result = 0;
-	switch (q) {
-	case QueryType::AddStop:
-		result = 0; // highest priority
-		break;
 
-	case QueryType::Distancies:
-		result = 1;
-		break;
-	case QueryType::AddBus:
-		result = 2;
-		break;
-
-	case QueryType::BusInfo: // have same priority
-	case QueryType::StopInfo:
-		result = 3;
-		break;
-		
-	default:
-		result = static_cast<size_t>(QueryType::QueryTypesAmount);
-		break;
-	}
-	return result;
+svg::Color JsonReader::GetSvgColor(const json::Node& source) const {
+    if (source.IsArray()) {
+        auto& raw_color = source.AsArray();
+        if (raw_color.size() == 3) {
+            return svg::Rgb{ 
+                static_cast<uint8_t>( raw_color[0].AsInt() ), 
+                static_cast<uint8_t>(raw_color[1].AsInt() ),
+                static_cast<uint8_t>(raw_color[2].AsInt() ) 
+            };
+        }
+        else if (raw_color.size() == 4) {
+            return svg::Rgba{ 
+                static_cast<uint8_t>( raw_color[0].AsInt() ),
+                static_cast<uint8_t>( raw_color[1].AsInt() ),
+                static_cast<uint8_t>( raw_color[2].AsInt() ),
+                raw_color[3].AsDouble()
+            };
+        }
+    }
+    else if (source.IsString()) {
+        return source.AsString();
+    }
+    return "none"s;
 }
 
-//---------  InputReader -----------
-void InputReader::ProcessQuery(Query&& q) {
-	if ((q.type == QueryType::AddStop) && !q.stop_distancies.empty()) {
-		Query extra_q;
-		extra_q.type = QueryType::Distancies;
-		extra_q.stop = q.stop;
-		extra_q.stop_distancies.swap(q.stop_distancies);
-		queue_.Add(extra_q, GetPriority(extra_q.type));
-	}
-	if (q.type == QueryType::Invalid) return;
-	queue_.Add(q, GetPriority(q.type));
+renderer::RenderSettings JsonReader::ExtractRenderSetts(const json::Dict& source) const {
+	renderer::RenderSettings render_settings;
+    try {
+        render_settings.width = source.at("width").AsDouble();
+        render_settings.height = source.at("height").AsDouble();
+        render_settings.padding = source.at("padding").AsDouble();
+        render_settings.line_width = source.at("line_width").AsDouble();
+        render_settings.stop_radius = source.at("stop_radius").AsDouble();
+        render_settings.bus_label_font_size = source.at("bus_label_font_size").AsInt();
+        render_settings.bus_label_offset.first = source.at("bus_label_offset").AsArray().at(0).AsDouble();
+        render_settings.bus_label_offset.second = source.at("bus_label_offset").AsArray().at(1).AsDouble();
+        render_settings.stop_label_font_size = source.at("stop_label_font_size").AsInt();
+        render_settings.stop_label_offset.first = source.at("stop_label_offset").AsArray().at(0).AsDouble();
+        render_settings.stop_label_offset.second = source.at("stop_label_offset").AsArray().at(1).AsDouble();  
+        render_settings.underlayer_color = GetSvgColor(source.at("underlayer_color"));
+        render_settings.underlayer_width = source.at("underlayer_width").AsDouble();
+        for (auto next_color : source.at("color_palette").AsArray()) {
+            render_settings.color_palette.push_back( GetSvgColor(next_color) );
+        }
+        //q.render_settings.color_palette
+    }
+    catch (...)
+    {
+        std::cout << "Wrong render settings format"s;
+    }
+    return render_settings;
 }
 
-Query InputReader::GetNext() {
-	return (queue_.GetNext());
-}
-bool InputReader::Empty() const {
-	return (queue_.Empty());
-}
-
-bool operator==(const Query& lhs, const Query& rhs) {
-	return
-		lhs.bus_name_info == rhs.bus_name_info &&
-		lhs.busname_to_route.first == rhs.busname_to_route.first &&
-		lhs.busname_to_route.second == rhs.busname_to_route.second &&
-		lhs.stop == rhs.stop &&
-		lhs.type == rhs.type;
-}
-
-
-
-void QueryTypeHandler(
-	Query&& q, 
-	transport::catalogue::TransportCatalogue& db, 
-	transport::statistics::StatisticsBaseOutput* statistics_output
-) {
-	
-	switch (q.type) {
-	case QueryType::AddStop:
-		db.AddStop(q.stop);
-		break;
-	case QueryType::AddBus:
-		db.AddBus(q.busname_to_route.first, q.busname_to_route.second, q.is_roundtrip);
-		break;
-	case QueryType::Distancies:
-		for (const auto& [to_stop, distance] : q.stop_distancies) {
-			db.SetStopsLength(q.stop.name, to_stop, distance);
-		}
-		break;	
-	case QueryType::StopInfo:
-		if (const auto& stop_info = db.GetBusesForStop(q.stop_name_info); stop_info) {
-			statistics_output->Add(q.stop_name_info, *stop_info, q.id);
-		}
-		else {
-			statistics_output->AddError(q.stop_name_info, statistics::RequestError::Stop, q.id);
-		}
-		break;
-	case QueryType::BusInfo:
-		if (const auto& bus_info = db.GetBusInfo(q.bus_name_info); bus_info) {
-			statistics_output->Add( *bus_info, q.id);
-		}
-		else {
-			statistics_output->AddError(q.bus_name_info, statistics::RequestError::Bus, q.id);
-		}		
-		break;
-        
-        case QueryType::QueryTypesAmount:
-        break;
-        case QueryType::Invalid:
-        break;
-        
-	}
-	/*
-	if (statistics_output->Ready()) {
-		statistics_output->Show();
-	}
-	*/
-}
-
-//---------------- json_reader -------------------
-void JsonReader::Process(size_t) {
+transport::requests::QueriesQueue JsonReader::Process() {
+	transport::requests::QueriesQueue queries_queue_;
 	json::Document document = json::Load(input_);
+	json::Print(document, std::cout);
 	for (const auto& request_type : document.GetRoot().AsMap()) {
 		if (request_type.first == "base_requests"s || request_type.first == "stat_requests"s) {
 			for (const auto& request : request_type.second.AsArray()) {
-				ProcessQuery(ExtractQuery(request.AsMap()));
+				auto q = ExtractQuery(request.AsMap());
+				queries_queue_.Push( std::move(q) );				
 			}
 		}
 		else if (request_type.first == "render_settings"s) {
-			raw_render_settings = request_type.second.AsMap();				
+			queries_queue_.SetRendererSettings( ExtractRenderSetts( request_type.second.AsMap() ) );
 		}
 	}
+	return queries_queue_;
 }
 
-json::Dict& JsonReader::GetRawRenderSettings() { 
-	return raw_render_settings; 
-}
+transport::requests::Query JsonReader::ExtractQuery(const json::Dict& source){	
+	transport::requests::Query q{};
 
-
-Query JsonReader::ExtractQuery(const json::Dict& source){
-	Query q{};
 	if (source.at("type").AsString() == "Stop") {
 		if (const auto it = source.find("id"); it != source.end()) {
-			q.type = QueryType::StopInfo;
+			q.type = transport::requests::QueryType::StopInfo;
 			q.id = it->second.AsInt();
 			q.stop_name_info = source.at("name").AsString();
 		}
 		else {
-			q.type = QueryType::AddStop;
+			q.type = transport::requests::QueryType::AddStop;
 			q.stop.name = source.at("name").AsString();
 			q.stop.coordinates = { source.at("latitude").AsDouble(), source.at("longitude").AsDouble() };
 			for (const auto& [stop_to, distance] : source.at("road_distances").AsMap()) {
@@ -157,12 +103,12 @@ Query JsonReader::ExtractQuery(const json::Dict& source){
 	}
 	else if (source.at("type"s).AsString() == "Bus") {
 		if (const auto it = source.find("id"); it != source.end()) {
-			q.type = QueryType::BusInfo;
+			q.type = transport::requests::QueryType::BusInfo;
 			q.id = it->second.AsInt();
 			q.bus_name_info = source.at("name").AsString();
 		}
 		else {
-			q.type = QueryType::AddBus;			
+			q.type = transport::requests::QueryType::AddBus;
 			q.busname_to_route.first = source.at("name").AsString();
 			q.is_roundtrip = source.at("is_roundtrip").AsBool();
 			const auto& stops = source.at("stops").AsArray();
@@ -178,39 +124,17 @@ Query JsonReader::ExtractQuery(const json::Dict& source){
 			
 		}
 	}
-
-
+	else if (source.at("type"s).AsString() == "Map") {
+		q.type = transport::requests::QueryType::MapInfo;
+		if (const auto it = source.find("id"); it != source.end()) {			
+			q.id = it->second.AsInt();			
+		}
+	}
 	return q;
 }
 //-----------------json reader end -----------------
 
-
-
-
-
-
-
-
-
-
-
 } // end of namespace reader
-
-void RequestsProcess(
-	transport::reader::InputReader* reader,
-	int query_num,
-	transport::catalogue::TransportCatalogue& db,
-	transport::statistics::StatisticsBaseOutput* statistics_output
-) {
-	reader->Process(query_num);
-	while (!reader->Empty()) {
-		QueryTypeHandler(reader->GetNext(), db, statistics_output);
-	}
-	//statistics_output->Show();
-}
-
-
-
 
 } // end of namespace transport
 
